@@ -70,9 +70,10 @@ const Hero = () => {
 
                     <div className="mt-8">
                         <div>
-                            <Button className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad]">
+                            
+                            <Link href={"/sign-up"} className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad]">
                                 Créer Ma page
-                            </Button>
+                            </Link>
                         </div>
                     </div>
                 </section>
