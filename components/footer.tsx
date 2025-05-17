@@ -23,7 +23,7 @@ export default function Footer() {
                 {/* Colonne droite : logo + icônes */}
                 <div className="flex flex-col items-end gap-2">
                     <div className="text-xl font-semibold tracking-widest">
-                        HEYTA <span className="text-sm font-light">STUDIO</span>
+                        THE END <span className="text-sm font-light">Page</span>
                     </div>
                     <div className="flex space-x-4 text-white">
                         <a href="#" aria-label="Instagram">
