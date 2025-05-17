@@ -35,16 +35,7 @@ export default function RootLayout({
                 lang="en"
                 suppressHydrationWarning
                 className={`${outfit.className} antialiased`}>
-                <body>
-                    {/* <header className="flex justify-end items-center p-4 gap-4 h-16">
-                        <SignedOut>
-                            <SignInButton />
-                            <SignUpButton />
-                        </SignedOut>
-                        <SignedIn>
-                            <UserButton />
-                        </SignedIn>
-                    </header> */}
+                <body className="bg-[#000008] text-white min-h-screen overflow-auto">
                     <Nav />
                     <main>{children}</main>
                     <Footer />

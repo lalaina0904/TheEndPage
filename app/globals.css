@@ -129,5 +129,15 @@ button {
     background-image: url(/bg.png);
     background-size: cover;
     background-blend-mode: overlay;
-    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.bg_stories {
+    background-image: url(/bg.png);
+    background-size: cover;
+    background-blend-mode: overlay;
+}
+
+.padding-global {
+    padding-left: 5%;
+    padding-right: 5%;
 }
