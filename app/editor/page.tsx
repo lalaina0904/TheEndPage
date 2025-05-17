@@ -5,6 +5,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { Rnd } from "react-rnd";
+import { error } from "console";
 
 type StyleSuggestion = {
   description: string;
@@ -209,36 +210,106 @@ export default function AdvancedEditor() {
   const handleSave = async () => {
     if (!docData.title.trim()) {
       toast.error("Un titre est requis");
-      if (titleRef.current) {
-        titleRef.current.focus();
-      }
+      if (titleRef.current) titleRef.current.focus();
       return;
     }
-
+  
     setLoading(true);
     try {
+      // 1. Générer le HTML
+      const escapeHtml = (unsafe: string) =>
+        unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;")
+          .replace(/\n/g, "<br>");
+  
+      const styleObj = docData.style ? JSON.parse(docData.style) : {};
+      const styleString = Object.entries(styleObj)
+        .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+        .join("");
+  
+      const html = `
+        <div style="position:relative;margin:auto;width:800px;height:600px;background:#fff;${styleString}">
+          ${docData.elements.map(el => {
+            let customStyle = "";
+            if (el.customStyle) {
+              try {
+                const parsed = JSON.parse(el.customStyle);
+                customStyle = Object.entries(parsed)
+                  .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+                  .join("");
+              } catch {
+                customStyle = "";
+              }
+            }
+            const baseStyle = `
+              position:relative;
+              left:${el.x}px;top:${el.y}px;
+              width:${el.width}px;height:${el.height}px;
+              ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ""}
+              background:${el.backgroundColor || "transparent"};
+              font-size:${el.fontSize || "16px"};
+              font-family:${el.fontFamily || "Arial"};
+              color:${el.textColor || "#000"};
+              font-weight:500;
+              ${customStyle}
+            `;
+            if (el.type === "text") {
+              return `<div style="${baseStyle}" >${escapeHtml(el.content || "")}</div>`;
+            } else if (el.type === "image" || el.type === "gif") {
+              return `<img src="${el.src}" style="${baseStyle}" />`;
+            }
+            return "";
+          }).join("")}
+        </div>
+      `;
+  
+      // 2. Uploader le HTML sur S3 via /api/upload
+      const blob = new Blob([html], { type: "text/html" });
+      const formData = new FormData();
+      // Utilise un File pour garantir le nom et le type
+      const htmlFile = new File([blob], `${docData.title || "export"}.html`, { type: "text/html" });
+      formData.append("file", htmlFile);
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+  
+      if (!uploadRes.ok) throw  new Error();
+  
+      const { filename } = await uploadRes.json();
+      // Génère l'URL S3 (adapte selon ta config, ici bucket public)
+      const s3Url = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.amazonaws.com/${filename}`;
+  
+      // 3. Enregistre le post avec l'URL S3 comme content
       const res = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(docData),
+        body: JSON.stringify({ ...docData, content: s3Url }),
       });
-      
+  
       if (!res.ok) throw new Error("Échec de l'enregistrement");
-
+  
       const data = await res.json();
       const postId = data.post.id;
-      
+  
+      // 4. Génère le lien de partage
       const shareRes = await fetch("/api/share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ postId }),
       });
-      
+  
       if (!shareRes.ok) throw new Error("Échec de la génération du lien");
-
+  
       const shareData = await shareRes.json();
       const generatedUrl = `${window.location.origin}/shared/${shareData.id}`;
-      setShareUrl(generatedUrl);
+      setShareUrl(s3Url);
+      //setShareUrl(generatedUrl);
       toast.success("Document enregistré et partagé avec succès!");
     } catch (error) {
       console.error(error);
@@ -656,7 +727,7 @@ export default function AdvancedEditor() {
       .join("");
 
     const html = `
-      <div style="position:relative;width:800px;height:600px;background:#fff;${styleString}">
+      <div  style="position:relative;width:800px;height:600px;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;${styleString}">
         ${docData.elements.map(el => {
           // Correction : conversion camelCase -> kebab-case pour customStyle
           let customStyle = "";
@@ -671,7 +742,7 @@ export default function AdvancedEditor() {
             }
           }
           const baseStyle = `
-            position:absolute;
+            position:relative;
             left:${el.x}px;top:${el.y}px;
             width:${el.width}px;height:${el.height}px;
             ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ""}
