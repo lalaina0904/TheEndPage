@@ -1,3 +1,4 @@
+//gemini-2.0-flash
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
@@ -28,7 +29,8 @@ export async function POST(req: Request) {
         "backgroundColor": "#f9f9f9",
         "lineHeight": "1.6",
         "padding": "2rem",
-        "maxWidth": "800px"
+        "maxWidth": "800px",
+        "backgroundImage": "url(${`bearer $process.env.PEXELS_API_KEY!} https://api.pexels.com/v1/search?query=${tone}&per_page=1`})",
       }
     `;
     
