@@ -19,7 +19,7 @@ type BuilderElement = {
   fontFamily: string;
   textColor: string;
   id: string;
-  type: "text" | "image";
+  type: "text" | "image" | "gif"; // <-- Ajoute "gif"
   x: number;
   y: number;
   width: number;
@@ -30,6 +30,11 @@ type BuilderElement = {
   rotation?: number; // <-- Ajouté pour la rotation
   backgroundColor?: string; // <-- Ajouté pour le fond de l'élément
 };
+
+// Fonction utilitaire pour convertir camelCase en kebab-case
+function camelToKebab(str: string) {
+  return str.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
+}
 
 export default function AdvancedEditor() {
 
@@ -67,11 +72,12 @@ export default function AdvancedEditor() {
     elements: [],
   });
 
+
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [isCopied, setIsCopied] = useState(false);
-  const [activeToolbar, setActiveToolbar] = useState<'text' | 'format' | 'insert' | null>(null);
+  const [activeToolbar, setActiveToolbar] = useState<'text' | 'format' | 'insert' | 'bold' | 'italic' | null>(null);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
@@ -81,6 +87,12 @@ export default function AdvancedEditor() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColorType, setCurrentColorType] = useState<'text' | 'background' | null>(null);
   const [showInsertMenu, setShowInsertMenu] = useState(false);
+
+  // GIF search states
+  const [showGifSearch, setShowGifSearch] = useState(false);
+  const [gifResults, setGifResults] = useState<string[]>([]);
+  const [gifQuery, setGifQuery] = useState("");
+  const [isGifLoading, setIsGifLoading] = useState(false);
 
   // Pour stats
   const [wordCount, setWordCount] = useState(0);
@@ -438,20 +450,76 @@ export default function AdvancedEditor() {
     }));
   };
 
-  // Handler pour le file input du builder
+  // Ajout d'un GIF
+  const addGifElement = (src: string) => {
+    setDocData(prev => ({
+      ...prev,
+      elements: [
+        ...prev.elements,
+        {
+          id: Date.now().toString(),
+          type: "gif",
+          x: 120,
+          y: 120,
+          width: 200,
+          height: 200,
+          src,
+          fontSize: prev.fontSize,
+          fontFamily: prev.fontFamily,
+          textColor: prev.textColor,
+        },
+      ],
+    }));
+  };
+
+  // Handler pour le file input du builder (image/gif)
   const handleBuilderImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        addImageElement(event.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    if (file.type === "image/gif") {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          addGifElement(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          addImageElement(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  // Mettre à jour un élément du builder
+  // Recherche de GIFs via Tenor v1
+  const searchGifs = async (query: string) => {
+    setIsGifLoading(true);
+    setGifResults([]);
+    try {
+      const res = await fetch(
+        `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=8`
+      );
+      const data = await res.json();
+      const urls: string[] = [];
+      for (const result of data.results) {
+        const media = result.media && result.media[0];
+        if (media && media.gif && media.gif.url) {
+          urls.push(media.gif.url);
+        } else if (media && media.tinygif && media.tinygif.url) {
+          urls.push(media.tinygif.url);
+        }
+      }
+      setGifResults(urls);
+    } catch {
+      toast.error("Erreur lors de la recherche de GIFs");
+    }
+    setIsGifLoading(false);
+  };
+
   const updateElement = (idx: number, changes: Partial<BuilderElement>) => {
     setDocData(prev => ({
       ...prev,
@@ -581,9 +649,27 @@ export default function AdvancedEditor() {
         .replace(/'/g, "&#039;")
         .replace(/\n/g, "<br>");
 
+    // Correction : conversion camelCase -> kebab-case pour le style IA global
+    const styleObj = docData.style ? JSON.parse(docData.style) : {};
+    const styleString = Object.entries(styleObj)
+      .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+      .join("");
+
     const html = `
-      <div style="position:relative;width:800px;height:600px;background:#fff;">
+      <div style="position:relative;width:800px;height:600px;background:#fff;${styleString}">
         ${docData.elements.map(el => {
+          // Correction : conversion camelCase -> kebab-case pour customStyle
+          let customStyle = "";
+          if (el.customStyle) {
+            try {
+              const parsed = JSON.parse(el.customStyle);
+              customStyle = Object.entries(parsed)
+                .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+                .join("");
+            } catch {
+              customStyle = "";
+            }
+          }
           const baseStyle = `
             position:absolute;
             left:${el.x}px;top:${el.y}px;
@@ -594,28 +680,26 @@ export default function AdvancedEditor() {
             font-family:${el.fontFamily || "Arial"};
             color:${el.textColor || "#000"};
             font-weight:500;
-            ${el.customStyle ? Object.entries(JSON.parse(el.customStyle)).map(([k,v])=>`${k}:${v};`).join("") : ""}
+            ${customStyle}
           `;
           if (el.type === "text") {
-            return `<div style="${baseStyle}overflow:auto;padding:4px;border-radius:4px;">${escapeHtml(el.content || "")}</div>`;
-          }
-          if (el.type === "image") {
-            return `<img src="${el.src}" style="${baseStyle}object-fit:contain;border-radius:6px;pointer-events:none;" />`;
+            return `<div style="${baseStyle}" >${escapeHtml(el.content || "")}</div>`;
+          } else if (el.type === "image" || el.type === "gif") {
+            return `<img src="${el.src}" style="${baseStyle}" />`;
           }
           return "";
         }).join("")}
       </div>
     `;
+
+    // Téléchargement du HTML
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${docData.title || "canvas"}.html`;
-    document.body.appendChild(a);
+    a.download = `${docData.title || "export"}.html`;
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success("Export HTML généré !");
   }}
   className="px-3 py-1 bg-green-600 text-white rounded ml-2"
 >
@@ -932,6 +1016,7 @@ export default function AdvancedEditor() {
           Ajouter image
           <input type="file" accept="image/*" onChange={handleBuilderImageUpload} className="hidden" />
         </label>
+        <button onClick={() => setShowGifSearch(true)} className="px-3 py-1 bg-blue-500 text-white rounded">Ajouter GIF</button>
       </div>
 
       {/* Toolbar de l'élément sélectionné */}
@@ -1142,6 +1227,50 @@ export default function AdvancedEditor() {
               >
                 Fermer
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GIF Search Dialog */}
+      {showGifSearch && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 max-w-lg w-full">
+            <div className="flex mb-2">
+              <input
+                type="text"
+                value={gifQuery}
+                onChange={e => setGifQuery(e.target.value)}
+                placeholder="Rechercher un GIF"
+                className="flex-1 border rounded px-2 py-1"
+              />
+              <button
+                onClick={() => searchGifs(gifQuery)}
+                className="ml-2 px-3 py-1 bg-blue-500 text-white rounded"
+                disabled={isGifLoading}
+              >
+                {isGifLoading ? "Recherche..." : "Rechercher"}
+              </button>
+              <button
+                onClick={() => setShowGifSearch(false)}
+                className="ml-2 px-3 py-1 bg-gray-300 rounded"
+              >
+                Fermer
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+              {gifResults.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt="GIF"
+                  className="w-full h-24 object-cover cursor-pointer rounded hover:ring-2 ring-blue-400"
+                  onClick={() => {
+                    addGifElement(url);
+                    setShowGifSearch(false);
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>
