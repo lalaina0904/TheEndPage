@@ -12,17 +12,25 @@ const links = [
     { href: '/tendances', label: 'Tendances' },
 ];
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
 export default function Nav() {
     const [open, setOpen] = useState(false);
 
     return (
         <div className="fixed w-full z-50">
             {/* Desktop / Header */}
-            <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3 md:py-4 my-3 rounded-full bg-background/5 backdrop-blur-lg md:rounded-full border-[0.5px] border-neutral-100/20">
+            <div className="container mx-auto flex items-center justify-between px-4 py-3 md:py-4 my-3 rounded-full bg-background/5 backdrop-blur-lg md:rounded-full border-[0.5px] border-[#f1caad]/40">
                 <Link
                     href="/"
                     className="text-xl font-semibold tracking-widest">
-                    THE END <span className="text-sm font-light">Page</span>
+                    THE END.<span className="text-sm font-light">Page</span>
                 </Link>
 
                 <nav className="hidden md:flex items-center gap-6">
@@ -30,15 +38,23 @@ export default function Nav() {
                         <Link
                             key={link.href}
                             href={link.href}
-                            className="hover:underline">
+                            className="hover:underline uppercase">
                             {link.label}
                         </Link>
                     ))}
-                    <Button variant="default">Se connecter</Button>
-                    <select className="ml-4 text-sm focus:outline-none">
-                        <option>FR</option>
-                        <option>EN</option>
-                    </select>
+                    <Button variant="default" className="uppercase">
+                        Se connecter
+                    </Button>
+
+                    <Select>
+                        <SelectTrigger className="border-none focus-within:border-none">
+                            <SelectValue placeholder="FR" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="light">FR</SelectItem>
+                            <SelectItem value="dark">EN</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </nav>
 
                 <button
@@ -59,7 +75,7 @@ export default function Nav() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: '100%' }}
                         transition={{ duration: 0.3 }}
-                        className="md:hidden fixed top-0 left-0 h-screen w-full z-40 bg-white/80 backdrop-blur-2xl text-black">
+                        className="md:hidden fixed top-0 left-0 h-screen w-full z-40 bg-white text-black">
                         <div className="flex items-center justify-between px-4 py-5 border-b border-neutral-200  ">
                             <Link
                                 href="/"
@@ -107,7 +123,7 @@ export default function Nav() {
                             </div>
 
                             <div className="mt-auto pt-10">
-                                <select className="text-sm bg-transparent focus:outline-none">
+                                <select className="text-sm">
                                     <option>FR</option>
                                     <option>EN</option>
                                 </select>
