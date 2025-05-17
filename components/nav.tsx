@@ -20,6 +20,14 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
+import {
+    SignInButton,
+    SignUpButton,
+    SignedIn,
+    SignedOut,
+    UserButton,
+} from '@clerk/nextjs';
+
 export default function Nav() {
     const [open, setOpen] = useState(false);
 
@@ -42,10 +50,28 @@ export default function Nav() {
                             {link.label}
                         </Link>
                     ))}
-                    <Button variant="default" className="uppercase">
+                    {/* <Button variant="default" className="uppercase">
                         Se connecter
-                    </Button>
+                    </Button> */}
 
+                    <div>
+                        <SignedOut>
+                            <div className="bg-[#f1caad] rounded-md px-4 py-2 text-[0.9rem] shadow-none cursor-pointer focus:ring-offset-0 focus:ring-0">
+                                <SignInButton
+                                    forceRedirectUrl={'/'}
+                                    children={
+                                        <span className="text-neutral-500 uppercase font-semibold">
+                                            Se connecter
+                                        </span>
+                                    }
+                                />
+                            </div>
+                        </SignedOut>
+
+                        <SignedIn>
+                            <UserButton />
+                        </SignedIn>
+                    </div>
                     <Select>
                         <SelectTrigger className="border-none focus-within:border-none">
                             <SelectValue placeholder="FR" />

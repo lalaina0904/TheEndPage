@@ -163,3 +163,30 @@ button {
 .animate-marquee-reverse {
     animation: marquee-reverse 30s linear infinite;
 }
+
+.componentContainer,
+.pageContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center !important;
+}
+
+.pageContainer {
+    height: 100vh;
+    width: 100vw;
+    overflow-y: auto;
+    align-items: center !important;
+    padding-top: clamp(2rem, 10vw, 5rem);
+}
+
+.componentContainer {
+    margin-bottom: 0 !important;
+}
+
+.cl-internal-1dauvpw {
+    background-color: #29304d !important;
+}
+.cl-internal-piyvrh > :not(:first-of-type),
+.cl-internal-df7v37 > :not(:first-of-type) {
+    display: none !important;
+}

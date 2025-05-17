@@ -3,6 +3,15 @@ import React from 'react';
 import { Button } from './ui/button';
 import { FiTrendingUp } from 'react-icons/fi';
 
+import {
+    SignInButton,
+    SignUpButton,
+    SignedIn,
+    SignedOut,
+    UserButton,
+} from '@clerk/nextjs';
+import { Span } from 'next/dist/trace';
+
 const Hero = () => {
     return (
         <div className="relative w-full h-screen overflow-hidden text-white">
@@ -70,9 +79,14 @@ const Hero = () => {
 
                     <div className="mt-8">
                         <div>
-                            <Button className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad]">
-                                Créer Ma page
-                            </Button>
+                            <SignedOut>
+                                <div className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad]">
+                                    <SignInButton
+                                        forceRedirectUrl={'/editor'}
+                                        children={<span>Créer une page</span>}
+                                    />
+                                </div>
+                            </SignedOut>
                         </div>
                     </div>
                 </section>
@@ -139,7 +153,7 @@ const Hero = () => {
                         </div>
                     </div>
                 </section>
-                <div className="text-white">hehe</div>
+                {/* <div className="text-white">hehe</div> */}
             </div>
         </div>
     );
