@@ -32,3 +32,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
+
+export async function GET() {
+  try {
+    const user= await currentUser();
+    const id= user?.id;
+
+    if (!id) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
+
+    const posts = await prisma.post.findMany({
+      where: { authorId: id },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(posts);
+  } catch (error: any) {
+    console.error("Erreur dans GET /api/posts:", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
+}
