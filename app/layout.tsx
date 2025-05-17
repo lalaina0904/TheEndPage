@@ -26,7 +26,7 @@ export default function RootLayout({
             lang="en"
             suppressHydrationWarning
             className={`${outfit.className} antialiased`}>
-            <body className="bg-[#000008] text-white min-h-screen">
+            <body className="bg-[#000008] text-white min-h-screen overflow-auto scrollbar-hide">
                 <Nav />
                 <main>{children}</main>
                 <Footer />
