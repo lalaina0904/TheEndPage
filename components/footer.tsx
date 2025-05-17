@@ -23,7 +23,7 @@ export default function Footer() {
                 {/* Colonne droite : logo + icônes */}
                 <div className="flex flex-col items-end gap-2">
                     <div className="text-xl font-semibold tracking-widest">
-                        THE END <span className="text-sm font-light">Page</span>
+                        THE END.<span className="text-sm font-light">Page</span>
                     </div>
                     <div className="flex space-x-4 text-white">
                         <a href="#" aria-label="Instagram">
@@ -57,7 +57,7 @@ export default function Footer() {
                     </Link>
 
                     <span className="text-xs">
-                        © 2025 THE END. Tous droits réservés.
+                        © 2025 THE END.Page Tous droits réservés.
                     </span>
                 </div>
             </div>

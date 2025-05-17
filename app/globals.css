@@ -124,3 +124,10 @@
 button {
     cursor: pointer !important;
 }
+
+.bg_aestetic {
+    background-image: url(/bg.png);
+    background-size: cover;
+    background-blend-mode: overlay;
+    background-color: rgba(0, 0, 0, 0.2);
+}
