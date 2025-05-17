@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth,currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from '@/lib/prismaClient';
 
@@ -6,8 +6,9 @@ export async function POST(req: Request) {
   try {
     const authResult = auth();
     console.log("auth() result:", authResult);
-    const { userId } : any = authResult;
-    if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    const user= await currentUser();
+    const id= user?.id;
+    //if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
     const body = await req.json();
     const { title, content, tone } = body;
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
         title,
         content,
         tone,
-        authorId: userId,
+        authorId: id,
       },
     });
 
