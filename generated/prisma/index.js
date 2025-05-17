@@ -169,7 +169,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/home/marc/Marc/webcup/bisounours-2025/TheEndPage/generated/prisma",
+      "value": "/home/tombosoa/Nata/WEBCUP2K25/TheEndPage/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -183,7 +183,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/marc/Marc/webcup/bisounours-2025/TheEndPage/prisma/schema.prisma",
+    "sourceFilePath": "/home/tombosoa/Nata/WEBCUP2K25/TheEndPage/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

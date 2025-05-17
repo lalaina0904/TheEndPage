@@ -3,6 +3,15 @@ import { Outfit } from 'next/font/google';
 import './globals.css';
 import Nav from '@/components/nav';
 import Footer from '@/components/footer';
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs'
+
 
 const outfit = Outfit({
     weight: ['400', '500', '600', '700'],
@@ -22,15 +31,24 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html
-            lang="en"
-            suppressHydrationWarning
-            className={`${outfit.className} antialiased`}>
-            <body className="bg-[#000008] text-white min-h-screen">
-                <Nav />
-                <main>{children}</main>
-                <Footer />
-            </body>
-        </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body>
+          <header className="flex justify-end items-center p-4 gap-4 h-16">
+            <SignedOut>
+              <SignInButton />
+              <SignUpButton />
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </header>
+            <Nav />          
+                {children}
+            <Footer />
+        </body>
+      </html>
+    </ClerkProvider>
+
     );
 }
