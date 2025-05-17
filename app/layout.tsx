@@ -11,6 +11,8 @@ import {
     SignedOut,
     UserButton,
 } from '@clerk/nextjs';
+import { ThemeProvider } from 'next-themes';
+import ClerkThemeWrapper from '@/components/ClerkThemeWrapper';
 
 const outfit = Outfit({
     weight: ['400', '500', '600', '700'],
@@ -36,9 +38,16 @@ export default function RootLayout({
                 suppressHydrationWarning
                 className={`${outfit.className} antialiased`}>
                 <body className="bg-[#000008] text-white min-h-screen overflow-auto">
-                    <Nav />
-                    <main>{children}</main>
-                    <Footer />
+                    <ThemeProvider
+                        attribute="class"
+                        defaultTheme="dark"
+                        enableSystem={false}>
+                        <ClerkThemeWrapper>
+                            <Nav />
+                            <main>{children}</main>
+                            <Footer />
+                        </ClerkThemeWrapper>
+                    </ThemeProvider>
                 </body>
             </html>
         </ClerkProvider>

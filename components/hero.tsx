@@ -3,6 +3,15 @@ import React from 'react';
 import { Button } from './ui/button';
 import { FiTrendingUp } from 'react-icons/fi';
 
+import {
+    SignInButton,
+    SignUpButton,
+    SignedIn,
+    SignedOut,
+    UserButton,
+} from '@clerk/nextjs';
+import { Span } from 'next/dist/trace';
+
 const Hero = () => {
     return (
         <div className="relative w-full h-screen overflow-hidden text-white">
@@ -17,8 +26,8 @@ const Hero = () => {
             </div>
 
             {/* Overlay content */}
-            <div className="relative z-10 lg:flex gap-6 h-full container mx-auto pb-[12rem]">
-                <section className="flex flex-col w-full space-y-4 justify-center items-baseline mt-[10rem] space-x-4 lg:mt-[14rem]">
+            <div className="relative z-10 lg:flex gap-6 h-full container mx-auto">
+                <section className="flex flex-col w-full space-y-4 justify-center items-baseline mt-[10rem] space-x-4">
                     <div>
                         <p className="italic text-2xl mb-14">
                             La fin n’est que le début… d’un chef-d'œuvre.
@@ -70,15 +79,20 @@ const Hero = () => {
 
                     <div className="mt-8">
                         <div>
-                            <Button className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad]">
-                                Créer Ma page
-                            </Button>
+                            <SignedOut>
+                                <div className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad]">
+                                    <SignInButton
+                                        forceRedirectUrl={'/editor'}
+                                        children={<span>Créer une page</span>}
+                                    />
+                                </div>
+                            </SignedOut>
                         </div>
                     </div>
                 </section>
 
                 <section className="flex flex-col justify-center w-max-[6rem] space-y-6 mt-10 lg:mt-[14rem]">
-                    <div className="bg-[#111111b8] shadow-lg rounded-2xl p-6 space-y-4">
+                    <div className="bg-[#111111ee] shadow-lg rounded-2xl p-6 space-y-4">
                         <h3 className="font-semibold mb-2">Extrait de page</h3>
                         {/* -- exemple -- */}
                         <div className="text-gray-300">
@@ -100,7 +114,7 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    <div className="bg-[#111111b8] shadow-lg rounded-2xl p-6 text-lg">
+                    <div className="bg-[#111111ee] shadow-lg rounded-2xl p-6 text-lg">
                         <h3 className="font-semibold mb-2 flex items-center gap-2">
                             <FiTrendingUp className="text-green-400" />{' '}
                             Statistiques de style
@@ -125,7 +139,7 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    <div className="bg-[#111111b8] shadow-lg rounded-2xl p-6">
+                    <div className="bg-[#111111ee] shadow-lg rounded-2xl p-6">
                         <h3 className="font-semibold mb-2">Activité récente</h3>
                         <div className="text-xs text-gray-400">
                             Pages créées cette semaine :{' '}
@@ -139,8 +153,8 @@ const Hero = () => {
                         </div>
                     </div>
                 </section>
+                {/* <div className="text-white">hehe</div> */}
             </div>
-            <div>hehe</div>
         </div>
     );
 };
