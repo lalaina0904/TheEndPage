@@ -169,7 +169,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/home/tombosoa/Nata/WEBCUP2K25/TheEndPage/generated/prisma",
+      "value": "/home/lalaina/Documents/bisounouurs_webcup/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -183,12 +183,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/tombosoa/Nata/WEBCUP2K25/TheEndPage/prisma/schema.prisma",
+    "sourceFilePath": "/home/lalaina/Documents/bisounouurs_webcup/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../prisma",
   "clientVersion": "6.8.2",
@@ -197,6 +196,7 @@ const config = {
     "db"
   ],
   "activeProvider": "mysql",
+  "postinstall": true,
   "inlineDatasources": {
     "db": {
       "url": {
