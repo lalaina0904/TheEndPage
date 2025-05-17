@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { Rnd } from "react-rnd";
 
 type StyleSuggestion = {
   description: string;
@@ -13,14 +14,45 @@ type StyleSuggestion = {
 
 type Collaborator = { initials: string; [key: string]: any };
 
+type BuilderElement = {
+  fontSize: string;
+  fontFamily: string;
+  textColor: string;
+  id: string;
+  type: "text" | "image";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  content?: string;
+  src?: string;
+  customStyle?: string;
+  rotation?: number; // <-- Ajouté pour la rotation
+  backgroundColor?: string; // <-- Ajouté pour le fond de l'élément
+};
+
 export default function AdvancedEditor() {
-  const { user } = useUser();
+
+   const { user } = useUser();
   const router = useRouter();
   const editorRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [docData, setDocData] = useState({
+  const [docData, setDocData] = useState<{
+    title: string;
+    content: string;
+    tone: string;
+    format: string;
+    style: string;
+    fontFamily: string;
+    fontSize: string;
+    textColor: string;
+    backgroundColor: string;
+    lineHeight: string;
+    textAlign: string;
+    elements: BuilderElement[];
+  }>({
     title: "",
     content: "",
     tone: "neutral",
@@ -32,12 +64,13 @@ export default function AdvancedEditor() {
     backgroundColor: "#ffffff",
     lineHeight: "1.5",
     textAlign: "left",
+    elements: [],
   });
+
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [isCopied, setIsCopied] = useState(false);
-  const [wordCount, setWordCount] = useState(0);
-  const [charCount, setCharCount] = useState(0);
   const [activeToolbar, setActiveToolbar] = useState<'text' | 'format' | 'insert' | null>(null);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -48,38 +81,28 @@ export default function AdvancedEditor() {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [currentColorType, setCurrentColorType] = useState<'text' | 'background' | null>(null);
   const [showInsertMenu, setShowInsertMenu] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
 
+  // Pour stats
+  const [wordCount, setWordCount] = useState(0);
+  const [charCount, setCharCount] = useState(0);
+
+  // Options
   const fontOptions = [
     "Arial", "Verdana", "Helvetica", "Times New Roman", 
     "Courier New", "Georgia", "Palatino", "Garamond",
     "Comic Sans MS", "Impact", "Lucida Sans", "Tahoma"
   ];
-
   const fontSizeOptions = [
     "8px", "10px", "12px", "14px", "16px", "18px", 
     "20px", "24px", "28px", "32px", "36px", "42px", "48px"
   ];
-
   const lineHeightOptions = ["1", "1.15", "1.5", "2", "2.5"];
-
   const textAlignOptions = [
     { value: "left", icon: "format_align_left" },
     { value: "center", icon: "format_align_center" },
     { value: "right", icon: "format_align_right" },
     { value: "justify", icon: "format_align_justify" }
   ];
-
-  const formatOptions = [
-    { value: "normal", label: "Normal" },
-    { value: "heading1", label: "Titre 1" },
-    { value: "heading2", label: "Titre 2" },
-    { value: "heading3", label: "Titre 3" },
-    { value: "bullet", label: "Liste à puces" },
-    { value: "numbered", label: "Liste numérotée" },
-    { value: "quote", label: "Citation" },
-  ];
-
   const toneOptions = [
     { value: "happy", label: "Heureux", type: "mood" },
     { value: "sad", label: "Triste", type: "mood" },
@@ -99,6 +122,15 @@ export default function AdvancedEditor() {
     { value: "whimsical", label: "Capricieux", type: "mood" }
   ];
 
+  const formatOptions = [
+    { value: "normal", label: "Normal" },
+    { value: "heading1", label: "Titre 1" },
+    { value: "heading2", label: "Titre 2" },
+    { value: "heading3", label: "Titre 3" },
+    { value: "bullet", label: "Liste à puces" },
+    { value: "numbered", label: "Liste numérotée" },
+    { value: "quote", label: "Citation" }
+  ];
   const colorPalette = [
     "#000000", "#434343", "#666666", "#999999", "#b7b7b7", "#cccccc", "#d9d9d9", "#efefef", "#f3f3f3", "#ffffff",
     "#980000", "#ff0000", "#ff9900", "#ffff00", "#00ff00", "#00ffff", "#4a86e8", "#0000ff", "#9900ff", "#ff00ff",
@@ -246,7 +278,15 @@ export default function AdvancedEditor() {
   };
 
   const applyStyle = (css: string) => {
-    setDocData(prev => ({ ...prev, style: css }));
+    setDocData(prev => ({
+      ...prev,
+      style: css,
+      elements: prev.elements.map(el =>
+        el.type === "text"
+          ? { ...el, customStyle: css }
+          : el
+      ),
+    }));
     toast.success("Style appliqué!");
     setShowStyleSuggestions(false);
   };
@@ -337,49 +377,151 @@ export default function AdvancedEditor() {
   };
 
   useEffect(() => {
-    const applyToneBasedStyle = async () => {
-      if (docData.tone && docData.content) {
-        setIsAILoading(true);
-        try {
-          const response = await fetch("/api/ai-apply-tone-style", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              content: docData.content,
-              tone: docData.tone
-            }),
-          });
-
-          if (!response.ok) throw new Error("Échec de l'application du style");
-
-          const data = await response.json();
-          setDocData(prev => ({ ...prev, style: data.css }));
-          toast.success(`Style ${docData.tone} appliqué automatiquement`);
-        } catch (error) {
-          console.error(error);
-          toast.error("Erreur lors de l'application du style");
-        } finally {
-          setIsAILoading(false);
-        }
-      }
-    };
-
-    const timer = setTimeout(() => {
-      applyToneBasedStyle();
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [docData.tone, docData.content]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
       if (docData.content.length > 30) {
         getStyleSuggestions();
       }
-    }, 1000);
-
-    return () => clearTimeout(timer);
   }, [docData.content]);
+
+
+  // Statistiques sur le texte (tous les éléments texte concaténés)
+  useEffect(() => {
+    const allText = docData.elements
+      .filter(el => el.type === "text")
+      .map(el => el.content || "")
+      .join(" ");
+    const words = allText.trim() ? allText.trim().split(/\s+/).length : 0;
+    setWordCount(words);
+    setCharCount(allText.length);
+  }, [docData.elements]);
+
+  // Ajout d'un texte
+  const addTextElement = () => {
+    setDocData(prev => ({
+      ...prev,
+      elements: [
+        ...prev.elements,
+        {
+          id: Date.now().toString(),
+          type: "text",
+          x: 50,
+          y: 50,
+          width: 300,
+          height: 60,
+          content: "Nouveau texte",
+          fontSize: prev.fontSize,
+          fontFamily: prev.fontFamily,
+          textColor: prev.textColor,
+        },
+      ],
+    }));
+  };
+
+  // Ajout d'une image
+  const addImageElement = (src: string) => {
+    setDocData(prev => ({
+      ...prev,
+      elements: [
+        ...prev.elements,
+        {
+          id: Date.now().toString(),
+          type: "image",
+          x: 100,
+          y: 100,
+          width: 200,
+          height: 200,
+          src,
+          fontSize: prev.fontSize,
+          fontFamily: prev.fontFamily,
+          textColor: prev.textColor,
+        },
+      ],
+    }));
+  };
+
+  // Handler pour le file input du builder
+  const handleBuilderImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        addImageElement(event.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Mettre à jour un élément du builder
+  const updateElement = (idx: number, changes: Partial<BuilderElement>) => {
+    setDocData(prev => ({
+      ...prev,
+      elements: prev.elements.map((el, i) =>
+        i === idx ? { ...el, ...changes } : el
+      ),
+    }));
+  };
+
+  // Nouvel état pour l'élément sélectionné
+  const [selectedElementIdx, setSelectedElementIdx] = useState<number | null>(null);
+
+  // Méthode pour sélectionner un élément
+  const selectElement = (idx: number) => setSelectedElementIdx(idx);
+
+  // Méthode pour faire pivoter l'élément sélectionné
+  const rotateSelectedElement = (angle: number) => {
+    if (selectedElementIdx === null) return;
+    setDocData(prev => ({
+      ...prev,
+      elements: prev.elements.map((el, i) =>
+        i === selectedElementIdx
+          ? { ...el, rotation: (el.rotation || 0) + angle }
+          : el
+      ),
+    }));
+  };
+
+  // Méthode pour changer la couleur de fond de l'élément sélectionné
+  const changeSelectedElementBg = (color: string) => {
+    if (selectedElementIdx === null) return;
+    setDocData(prev => ({
+      ...prev,
+      elements: prev.elements.map((el, i) =>
+        i === selectedElementIdx
+          ? { ...el, backgroundColor: color }
+          : el
+      ),
+    }));
+  };
+
+  // Méthode pour changer la couleur de police de l'élément sélectionné
+  const changeSelectedElementTextColor = (color: string) => {
+    if (selectedElementIdx === null) return;
+    setDocData(prev => ({
+      ...prev,
+      elements: prev.elements.map((el, i) =>
+        i === selectedElementIdx
+          ? { ...el, textColor: color }
+          : el
+      ),
+    }));
+  };
+
+  // Méthode pour changer la taille de police de l'élément sélectionné
+  const changeSelectedElementFontSize = (size: string) => {
+    if (selectedElementIdx === null) return;
+    setDocData(prev => ({
+      ...prev,
+      elements: prev.elements.map((el, i) =>
+        i === selectedElementIdx
+          ? { ...el, fontSize: size }
+          : el
+      ),
+    }));
+  };
+
+  //
+
+
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -398,10 +540,8 @@ export default function AdvancedEditor() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>The End Page
-            <span className="ml-2 text-xl font-medium text-gray-700"></span>
           </div>
         </div>
-        
         <div className="flex-1 max-w-2xl mx-4">
           <input
             ref={titleRef}
@@ -411,21 +551,7 @@ export default function AdvancedEditor() {
             onChange={(e) => setDocData({...docData, title: e.target.value})}
           />
         </div>
-        
         <div className="flex items-center space-x-2">
-          <div className="flex -space-x-1">
-            {collaborators.slice(0, 3).map((collab, i) => (
-              <div key={i} className="h-8 w-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-xs font-medium text-blue-600">
-                {collab.initials}
-              </div>
-            ))}
-            {collaborators.length > 3 && (
-              <div className="h-8 w-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
-                +{collaborators.length - 3}
-              </div>
-            )}
-          </div>
-          
           <button
             onClick={handleSave}
             disabled={loading}
@@ -443,8 +569,61 @@ export default function AdvancedEditor() {
             )}
             Partager
           </button>
+          <button
+  onClick={() => {
+    // Fonction pour échapper le texte
+    const escapeHtml = (unsafe: string) =>
+      unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+        .replace(/\n/g, "<br>");
+
+    const html = `
+      <div style="position:relative;width:800px;height:600px;background:#fff;">
+        ${docData.elements.map(el => {
+          const baseStyle = `
+            position:absolute;
+            left:${el.x}px;top:${el.y}px;
+            width:${el.width}px;height:${el.height}px;
+            ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ""}
+            background:${el.backgroundColor || "transparent"};
+            font-size:${el.fontSize || "16px"};
+            font-family:${el.fontFamily || "Arial"};
+            color:${el.textColor || "#000"};
+            font-weight:500;
+            ${el.customStyle ? Object.entries(JSON.parse(el.customStyle)).map(([k,v])=>`${k}:${v};`).join("") : ""}
+          `;
+          if (el.type === "text") {
+            return `<div style="${baseStyle}overflow:auto;padding:4px;border-radius:4px;">${escapeHtml(el.content || "")}</div>`;
+          }
+          if (el.type === "image") {
+            return `<img src="${el.src}" style="${baseStyle}object-fit:contain;border-radius:6px;pointer-events:none;" />`;
+          }
+          return "";
+        }).join("")}
+      </div>
+    `;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${docData.title || "canvas"}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Export HTML généré !");
+  }}
+  className="px-3 py-1 bg-green-600 text-white rounded ml-2"
+>
+  Exporter en HTML
+</button>
         </div>
       </header>
+
 
       {/* Toolbar */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-2 shadow-sm">
@@ -512,7 +691,47 @@ export default function AdvancedEditor() {
           {/* Ton du document */}
           <select
             value={docData.tone}
-            onChange={(e) => setDocData({...docData, tone: e.target.value})}
+            onChange={async (e) => {
+              const newTone = e.target.value;
+              setDocData(prev => ({ ...prev, tone: newTone }));
+
+              // Appel API IA pour appliquer le style au changement de ton
+              setIsAILoading(true);
+              try {
+                const allText = docData.elements
+                  .filter(el => el.type === "text")
+                  .map(el => el.content || "")
+                  .join(" ") || docData.content;
+
+                const response = await fetch("/api/ai-apply-tone-style", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    content: allText,
+                    tone: newTone
+                  }),
+                });
+
+                if (!response.ok) throw new Error("Échec de l'application du style");
+
+                const data = await response.json();
+                setDocData(prev => ({
+                  ...prev,
+                  style: data.css,
+                  elements: prev.elements.map(el =>
+                    el.type === "text"
+                      ? { ...el, customStyle: data.css }
+                      : el
+                  ),
+                }));
+                toast.success(`Style ${newTone} appliqué automatiquement`);
+              } catch (error) {
+                console.error(error);
+                toast.error("Erreur lors de l'application du style");
+              } finally {
+                setIsAILoading(false);
+              }
+            }}
             className="text-sm border rounded px-2 py-1 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {toneOptions.map((option) => (
@@ -706,26 +925,112 @@ export default function AdvancedEditor() {
         </div>
       </div>
 
-      {/* Document Area */}
+      {/* PAGE BUILDER TOOLBAR */}
+      <div className="flex space-x-2 p-2 bg-gray-100 border-b">
+        <button onClick={addTextElement} className="px-3 py-1 bg-blue-500 text-white rounded">Ajouter texte</button>
+        <label className="px-3 py-1 bg-blue-500 text-white rounded cursor-pointer">
+          Ajouter image
+          <input type="file" accept="image/*" onChange={handleBuilderImageUpload} className="hidden" />
+        </label>
+      </div>
+
+      {/* Toolbar de l'élément sélectionné */}
+      {selectedElementIdx !== null && (
+        <div className="flex items-center space-x-2 bg-gray-50 border p-2 rounded mb-2">
+          <span className="text-xs text-gray-500">Élément sélectionné :</span>
+          <button
+            onClick={() => rotateSelectedElement(-15)}
+            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+          >⟲ -15°</button>
+          <button
+            onClick={() => rotateSelectedElement(15)}
+            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+          >⟳ +15°</button>
+          <select
+            value={docData.elements[selectedElementIdx]?.fontSize || "16px"}
+            onChange={e => changeSelectedElementFontSize(e.target.value)}
+            className="text-xs border rounded px-2 py-1"
+          >
+            {fontSizeOptions.map(size => (
+              <option key={size} value={size}>{size.replace('px', '')}</option>
+            ))}
+          </select>
+          <input
+            type="color"
+            value={docData.elements[selectedElementIdx]?.textColor || "#000000"}
+            onChange={e => changeSelectedElementTextColor(e.target.value)}
+            title="Couleur du texte"
+          />
+          <input
+            type="color"
+            value={docData.elements[selectedElementIdx]?.backgroundColor || "#ffffff"}
+            onChange={e => changeSelectedElementBg(e.target.value)}
+            title="Couleur de fond"
+          />
+        </div>
+      )}
+
+      {/* PAGE BUILDER CANVAS */}
       <div className="flex-1 overflow-auto p-8">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6">
-            <div
-              ref={editorRef}
-              contentEditable
-              className="min-h-[80vh] focus:outline-none text-gray-800 relative placeholder"
-              style={getEditorStyle()}
-              onKeyDown={handleKeyDown}
-              onInput={(e) =>
-                setDocData({
-                  ...docData,
-                  content: (e.target as HTMLDivElement).innerHTML || "",
+        <div
+          className="relative mx-auto bg-white rounded-lg shadow-sm border border-gray-200"
+          style={{ width: 800, height: 600, minHeight: 400 }}
+        >
+          {docData.elements.map((el, idx) => (
+            <Rnd
+              key={el.id}
+              size={{ width: el.width, height: el.height }}
+              position={{ x: el.x, y: el.y }}
+              onDragStop={(_: any, d: { x: any; y: any; }) => updateElement(idx, { x: d.x, y: d.y })}
+              onResizeStop={(_: any, __: any, ref: { style: { width: string; height: string; }; }, delta: any, position: Partial<BuilderElement>) =>
+                updateElement(idx, {
+                  width: parseInt(ref.style.width),
+                  height: parseInt(ref.style.height),
+                  ...position,
                 })
               }
-              suppressContentEditableWarning
-              data-placeholder="Commencez à taper ici..."
-            />
-          </div>
+              bounds="parent"
+              minWidth={40}
+              minHeight={30}
+              onClick={() => selectElement(idx)}
+              style={{
+                zIndex: selectedElementIdx === idx ? 10 : 1,
+                border: selectedElementIdx === idx ? "2px solid #2563eb" : undefined,
+                background: el.backgroundColor || "transparent",
+              }}
+            >
+              {el.type === "text" ? (
+                <textarea
+                  className="w-full h-full border resize-none bg-transparent"
+                  value={el.content}
+                  onChange={e => updateElement(idx, { content: e.target.value })}
+                  style={{
+                    fontSize: el.fontSize || docData.fontSize,
+                    fontFamily: el.fontFamily || docData.fontFamily,
+                    color: el.textColor || docData.textColor,
+                    backgroundColor: el.backgroundColor || "transparent",
+                    fontWeight: 500,
+                    ...(el.customStyle ? JSON.parse(el.customStyle) : {}),
+                    transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
+                  }}
+                  onClick={e => { e.stopPropagation(); selectElement(idx); }}
+                />
+              ) : (
+                <img
+                  src={el.src}
+                  alt=""
+                  className="w-full h-full object-contain rounded"
+                  draggable={false}
+                  style={{
+                    pointerEvents: "none",
+                    background: el.backgroundColor || "transparent",
+                    transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
+                  }}
+                  onClick={e => { e.stopPropagation(); selectElement(idx); }}
+                />
+              )}
+            </Rnd>
+          ))}
         </div>
       </div>
 
@@ -740,11 +1045,6 @@ export default function AdvancedEditor() {
             <option>75%</option>
             <option>50%</option>
           </select>
-          <button className="hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </button>
         </div>
       </footer>
 
@@ -763,7 +1063,6 @@ export default function AdvancedEditor() {
                 </svg>
               </button>
             </div>
-            
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Lien de partage</label>
               <div className="flex">
@@ -781,7 +1080,6 @@ export default function AdvancedEditor() {
                 </button>
               </div>
             </div>
-            
             <div className="flex justify-end">
               <button
                 onClick={() => setShareUrl("")}
@@ -809,7 +1107,6 @@ export default function AdvancedEditor() {
                 </svg>
               </button>
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {styleSuggestions.map((suggestion, index) => (
                 <div key={index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -821,7 +1118,13 @@ export default function AdvancedEditor() {
                       ...JSON.parse(suggestion.css) 
                     }}
                   >
-                    Aperçu du style: {docData.content.substring(0, 50) || "Votre contenu ici..."}...
+                    Aperçu du style: {
+                      docData.elements
+                        .filter(el => el.type === "text")
+                        .map(el => el.content)
+                        .join(" ")
+                        .substring(0, 50) || "Votre contenu ici..."
+                    }...
                   </div>
                   <button
                     onClick={() => applyStyle(suggestion.css)}
@@ -832,7 +1135,6 @@ export default function AdvancedEditor() {
                 </div>
               ))}
             </div>
-            
             <div className="mt-4 flex justify-end">
               <button
                 onClick={() => setShowStyleSuggestions(false)}
