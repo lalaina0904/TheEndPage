@@ -18,6 +18,7 @@ export default function AdvancedEditor() {
   const router = useRouter();
   const editorRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [docData, setDocData] = useState({
     title: "",
@@ -25,43 +26,84 @@ export default function AdvancedEditor() {
     tone: "neutral",
     format: "normal",
     style: "",
+    fontFamily: "Arial",
+    fontSize: "16px",
+    textColor: "#000000",
+    backgroundColor: "#ffffff",
+    lineHeight: "1.5",
+    textAlign: "left",
   });
   const [loading, setLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
-  const [activeToolbar, setActiveToolbar] = useState<'text' | 'bold' | 'italic' | null>(null);
+  const [activeToolbar, setActiveToolbar] = useState<'text' | 'format' | 'insert' | null>(null);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAILoading, setIsAILoading] = useState(false);
   const [styleSuggestions, setStyleSuggestions] = useState<StyleSuggestion[]>([]);
   const [showStyleSuggestions, setShowStyleSuggestions] = useState(false);
+  const [showFontPicker, setShowFontPicker] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [currentColorType, setCurrentColorType] = useState<'text' | 'background' | null>(null);
+  const [showInsertMenu, setShowInsertMenu] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+
+  const fontOptions = [
+    "Arial", "Verdana", "Helvetica", "Times New Roman", 
+    "Courier New", "Georgia", "Palatino", "Garamond",
+    "Comic Sans MS", "Impact", "Lucida Sans", "Tahoma"
+  ];
+
+  const fontSizeOptions = [
+    "8px", "10px", "12px", "14px", "16px", "18px", 
+    "20px", "24px", "28px", "32px", "36px", "42px", "48px"
+  ];
+
+  const lineHeightOptions = ["1", "1.15", "1.5", "2", "2.5"];
+
+  const textAlignOptions = [
+    { value: "left", icon: "format_align_left" },
+    { value: "center", icon: "format_align_center" },
+    { value: "right", icon: "format_align_right" },
+    { value: "justify", icon: "format_align_justify" }
+  ];
 
   const formatOptions = [
     { value: "normal", label: "Normal" },
     { value: "heading1", label: "Titre 1" },
     { value: "heading2", label: "Titre 2" },
     { value: "heading3", label: "Titre 3" },
+    { value: "bullet", label: "Liste à puces" },
+    { value: "numbered", label: "Liste numérotée" },
+    { value: "quote", label: "Citation" },
   ];
 
   const toneOptions = [
-      { value: "happy", label: "Heureux", type: "mood" },
-  { value: "sad", label: "Triste", type: "mood" },
-  { value: "angry", label: "En colère", type: "mood" },
-  { value: "melancholic", label: "Mélancolique", type: "mood" },
-  { value: "romantic", label: "Romantique", type: "mood" },
-  { value: "anxious", label: "Anxieux", type: "mood" },
-  { value: "hopeful", label: "Optimiste", type: "mood" },
-  { value: "nostalgic", label: "Nostalgique", type: "mood" },
-  { value: "dramatic", label: "Dramatique", type: "mood" },
-  { value: "mysterious", label: "Mystérieux", type: "mood" },
-  { value: "grateful", label: "Reconnaissant", type: "mood" },
-  { value: "sarcastic", label: "Sarcastique", type: "mood" },
-  { value: "ironic", label: "Ironique", type: "mood" },
-  { value: "despairing", label: "Désespéré", type: "mood" },
-  { value: "playful", label: "Joueur", type: "mood" },
-  { value: "whimsical", label: "Capricieux", type: "mood" }
+    { value: "happy", label: "Heureux", type: "mood" },
+    { value: "sad", label: "Triste", type: "mood" },
+    { value: "angry", label: "En colère", type: "mood" },
+    { value: "melancholic", label: "Mélancolique", type: "mood" },
+    { value: "romantic", label: "Romantique", type: "mood" },
+    { value: "anxious", label: "Anxieux", type: "mood" },
+    { value: "hopeful", label: "Optimiste", type: "mood" },
+    { value: "nostalgic", label: "Nostalgique", type: "mood" },
+    { value: "dramatic", label: "Dramatique", type: "mood" },
+    { value: "mysterious", label: "Mystérieux", type: "mood" },
+    { value: "grateful", label: "Reconnaissant", type: "mood" },
+    { value: "sarcastic", label: "Sarcastique", type: "mood" },
+    { value: "ironic", label: "Ironique", type: "mood" },
+    { value: "despairing", label: "Désespéré", type: "mood" },
+    { value: "playful", label: "Joueur", type: "mood" },
+    { value: "whimsical", label: "Capricieux", type: "mood" }
+  ];
+
+  const colorPalette = [
+    "#000000", "#434343", "#666666", "#999999", "#b7b7b7", "#cccccc", "#d9d9d9", "#efefef", "#f3f3f3", "#ffffff",
+    "#980000", "#ff0000", "#ff9900", "#ffff00", "#00ff00", "#00ffff", "#4a86e8", "#0000ff", "#9900ff", "#ff00ff",
+    "#e6b8af", "#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#c9daf8", "#cfe2f3", "#d9d2e9", "#ead1dc",
+    "#dd7e6b", "#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#a4c2f4", "#9fc5e8", "#b4a7d6", "#d5a6bd"
   ];
 
   useEffect(() => {
@@ -72,6 +114,52 @@ export default function AdvancedEditor() {
 
   const handleFormatChange = (format: string) => {
     setDocData({ ...docData, format });
+    applyFormatting(format);
+  };
+
+  const applyFormatting = (format: string) => {
+    if (!editorRef.current) return;
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    const selectedText = range.toString();
+    if (!selectedText) return;
+    
+    let newContent = docData.content;
+    let formattedText = selectedText;
+    
+    switch (format) {
+      case "heading1":
+        formattedText = `<h1 style="font-size: 24px; font-weight: bold;">${selectedText}</h1>`;
+        break;
+      case "heading2":
+        formattedText = `<h2 style="font-size: 20px; font-weight: bold;">${selectedText}</h2>`;
+        break;
+      case "heading3":
+        formattedText = `<h3 style="font-size: 18px; font-weight: bold;">${selectedText}</h3>`;
+        break;
+      case "bullet":
+        formattedText = `<ul><li>${selectedText}</li></ul>`;
+        break;
+      case "numbered":
+        formattedText = `<ol><li>${selectedText}</li></ol>`;
+        break;
+      case "quote":
+        formattedText = `<blockquote style="border-left: 3px solid #ccc; padding-left: 10px; margin-left: 0;">${selectedText}</blockquote>`;
+        break;
+      default:
+        formattedText = selectedText;
+    }
+    
+    newContent = newContent.replace(selectedText, formattedText);
+    setDocData({ ...docData, content: newContent });
+    
+    // Mettre à jour l'éditeur
+    if (editorRef.current) {
+      editorRef.current.innerHTML = newContent;
+    }
   };
 
   const handleSave = async () => {
@@ -163,6 +251,91 @@ export default function AdvancedEditor() {
     setShowStyleSuggestions(false);
   };
 
+  const handleFontChange = (font: string) => {
+    setDocData({ ...docData, fontFamily: font });
+    setShowFontPicker(false);
+  };
+
+  const handleFontSizeChange = (size: string) => {
+    setDocData({ ...docData, fontSize: size });
+  };
+
+  const handleColorChange = (color: string) => {
+    if (currentColorType === 'text') {
+      setDocData({ ...docData, textColor: color });
+    } else if (currentColorType === 'background') {
+      setDocData({ ...docData, backgroundColor: color });
+    }
+    setShowColorPicker(false);
+  };
+
+  const handleTextAlign = (align: string) => {
+    setDocData({ ...docData, textAlign: align });
+  };
+
+  const handleLineHeightChange = (height: string) => {
+    setDocData({ ...docData, lineHeight: height });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newImages = [...images];
+    for (let i = 0; i < files.length; i++) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          newImages.push(event.target.result as string);
+          setImages([...newImages]);
+          
+          // Insérer l'image dans l'éditeur
+          if (editorRef.current) {
+            const img = document.createElement('img');
+            img.src = event.target.result as string;
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              range.insertNode(img);
+              range.setStartAfter(img);
+              selection.removeAllRanges();
+              selection.addRange(range);
+              
+              // Mettre à jour le contenu
+              setDocData({
+                ...docData,
+                content: editorRef.current?.innerHTML || ""
+              });
+            }
+          }
+        }
+      };
+      reader.readAsDataURL(files[i]);
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+    setShowInsertMenu(false);
+  };
+
+  const getEditorStyle = () => {
+    return {
+      fontFamily: docData.fontFamily,
+      fontSize: docData.fontSize,
+      color: docData.textColor,
+      backgroundColor: docData.backgroundColor,
+      lineHeight: docData.lineHeight,
+      textAlign: docData.textAlign as 'left' | 'center' | 'right' | 'justify',
+      ...(docData.style ? JSON.parse(docData.style) : {})
+    };
+  };
+
   useEffect(() => {
     const applyToneBasedStyle = async () => {
       if (docData.tone && docData.content) {
@@ -197,15 +370,17 @@ export default function AdvancedEditor() {
 
     return () => clearTimeout(timer);
   }, [docData.tone, docData.content]);
-useEffect(() => {
-  const timer = setTimeout(() => {
-    if (docData.content.length > 30) { // Se déclenche seulement après un certain nombre de caractères
-      getStyleSuggestions();
-    }
-  }, 1000); // Délai de 1 seconde après la fin de la saisie
 
-  return () => clearTimeout(timer);
-}, [docData.content]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (docData.content.length > 30) {
+        getStyleSuggestions();
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [docData.content]);
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
@@ -222,8 +397,8 @@ useEffect(() => {
           <div className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className="ml-2 text-xl font-medium text-gray-700">Docs</span>
+            </svg>The End Page
+            <span className="ml-2 text-xl font-medium text-gray-700"></span>
           </div>
         </div>
         
@@ -274,47 +449,44 @@ useEffect(() => {
       {/* Toolbar */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-2 shadow-sm">
         <div className="flex items-center space-x-1 overflow-x-auto">
+          {/* Menu déroulant pour les polices */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowFontPicker(!showFontPicker)}
+              className="text-sm border rounded px-2 py-1 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[120px] text-left"
+            >
+              {docData.fontFamily}
+            </button>
+            {showFontPicker && (
+              <div className="absolute z-20 mt-1 w-48 bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {fontOptions.map((font) => (
+                  <div
+                    key={font}
+                    onClick={() => handleFontChange(font)}
+                    className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                    style={{ fontFamily: font }}
+                  >
+                    {font}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Menu déroulant pour la taille de police */}
           <select
-            value={docData.format}
-            onChange={(e) => handleFormatChange(e.target.value)}
+            value={docData.fontSize}
+            onChange={(e) => handleFontSizeChange(e.target.value)}
             className="text-sm border rounded px-2 py-1 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            {formatOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+            {fontSizeOptions.map((size) => (
+              <option key={size} value={size}>{size.replace('px', '')}</option>
             ))}
           </select>
           
           <div className="border-l border-gray-300 h-6 mx-1"></div>
-          
-          <button 
-            onClick={() => setActiveToolbar('text')}
-            className={`p-2 rounded hover:bg-gray-100 ${activeToolbar === 'text' ? 'bg-gray-100' : ''}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </button>
-          
-          <button 
-            onClick={() => setActiveToolbar('bold')}
-            className={`p-2 rounded hover:bg-gray-100 ${activeToolbar === 'bold' ? 'bg-gray-100' : ''}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </button>
-          
-          <button 
-            onClick={() => setActiveToolbar('italic')}
-            className={`p-2 rounded hover:bg-gray-100 ${activeToolbar === 'italic' ? 'bg-gray-100' : ''}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          </button>
-          
-          <div className="border-l border-gray-300 h-6 mx-1"></div>
-          
+
+          {/* Suggestions de style IA */}
           <button 
             onClick={getStyleSuggestions}
             disabled={isAILoading}
@@ -337,6 +509,7 @@ useEffect(() => {
           
           <div className="border-l border-gray-300 h-6 mx-1"></div>
           
+          {/* Ton du document */}
           <select
             value={docData.tone}
             onChange={(e) => setDocData({...docData, tone: e.target.value})}
@@ -347,19 +520,189 @@ useEffect(() => {
             ))}
           </select>
           
+          {/* Boutons de formatage de texte */}
+          <button 
+            onClick={() => document.execCommand('bold', false)}
+            className="p-2 rounded hover:bg-gray-100"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </button>
+          
+          <button 
+            onClick={() => document.execCommand('italic', false)}
+            className="p-2 rounded hover:bg-gray-100"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </button>
+          
+          <button 
+            onClick={() => document.execCommand('underline', false)}
+            className="p-2 rounded hover:bg-gray-100"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h1a2 2 0 002-2v-5a2 2 0 00-2-2H6a2 2 0 00-2 2v5a2 2 0 002 2h1m8-4v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </button>
+          
+          <button 
+            onClick={() => document.execCommand('strikeThrough', false)}
+            className="p-2 rounded hover:bg-gray-100"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+            </svg>
+          </button>
+          
           <div className="border-l border-gray-300 h-6 mx-1"></div>
           
-          <button className="p-2 rounded hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-            </svg>
-          </button>
+          {/* Couleur du texte */}
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setCurrentColorType('text');
+                setShowColorPicker(!showColorPicker);
+              }}
+              className="p-2 rounded hover:bg-gray-100 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+              <div className="w-4 h-1 ml-1" style={{ backgroundColor: docData.textColor }}></div>
+            </button>
+          </div>
           
-          <button className="p-2 rounded hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </button>
+          {/* Couleur de fond */}
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setCurrentColorType('background');
+                setShowColorPicker(!showColorPicker);
+              }}
+              className="p-2 rounded hover:bg-gray-100 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              <div className="w-4 h-4 ml-1 border border-gray-300" style={{ backgroundColor: docData.backgroundColor }}></div>
+            </button>
+          </div>
+          
+          {showColorPicker && (
+            <div className="absolute z-20 mt-10 bg-white p-2 rounded shadow-lg border border-gray-200 grid grid-cols-10 gap-1 w-64">
+              {colorPalette.map((color) => (
+                <div
+                  key={color}
+                  onClick={() => handleColorChange(color)}
+                  className="w-5 h-5 cursor-pointer hover:border hover:border-gray-400"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+              <div className="col-span-10 mt-2">
+                <input
+                  type="color"
+                  value={currentColorType === 'text' ? docData.textColor : docData.backgroundColor}
+                  onChange={(e) => handleColorChange(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
+          
+          <div className="border-l border-gray-300 h-6 mx-1"></div>
+          
+          {/* Alignement du texte */}
+          {textAlignOptions.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => handleTextAlign(option.value)}
+              className={`p-2 rounded hover:bg-gray-100 ${docData.textAlign === option.value ? 'bg-gray-100' : ''}`}
+            >
+              <span className="material-icons text-base">{option.icon}</span>
+            </button>
+          ))}
+          
+          <div className="border-l border-gray-300 h-6 mx-1"></div>
+          
+          {/* Interligne */}
+          <select
+            value={docData.lineHeight}
+            onChange={(e) => handleLineHeightChange(e.target.value)}
+            className="text-sm border rounded px-2 py-1 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            {lineHeightOptions.map((height) => (
+              <option key={height} value={height}>Interligne: {height}</option>
+            ))}
+          </select>
+          
+          <div className="border-l border-gray-300 h-6 mx-1"></div>
+          
+          {/* Format de paragraphe */}
+          <select
+            value={docData.format}
+            onChange={(e) => handleFormatChange(e.target.value)}
+            className="text-sm border rounded px-2 py-1 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            {formatOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          
+          <div className="border-l border-gray-300 h-6 mx-1"></div>
+          
+          {/* Insertion d'éléments */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowInsertMenu(!showInsertMenu)}
+              className="p-2 rounded hover:bg-gray-100 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="ml-1 text-sm">Insérer</span>
+            </button>
+            
+            {showInsertMenu && (
+              <div className="absolute z-20 mt-1 left-0 bg-white rounded-md shadow-lg py-1 w-48">
+                <button
+                  onClick={triggerFileInput}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Image
+                </button>
+                <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                  </svg>
+                  Tableau
+                </button>
+                <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  </svg>
+                  Lien
+                </button>
+              </div>
+            )}
+            
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              multiple
+              className="hidden"
+            />
+          </div>
+          
+          <div className="border-l border-gray-300 h-6 mx-1"></div>
+        
         </div>
       </div>
 
@@ -371,12 +714,12 @@ useEffect(() => {
               ref={editorRef}
               contentEditable
               className="min-h-[80vh] focus:outline-none text-gray-800 relative placeholder"
-              style={docData.style ? JSON.parse(docData.style) : {}}
+              style={getEditorStyle()}
               onKeyDown={handleKeyDown}
               onInput={(e) =>
                 setDocData({
                   ...docData,
-                  content: (e.target as HTMLDivElement).textContent || "",
+                  content: (e.target as HTMLDivElement).innerHTML || "",
                 })
               }
               suppressContentEditableWarning
