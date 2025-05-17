@@ -1,3 +1,4 @@
+import ClientTestimonialsCarousel from '@/components/clientTestimonialCaroussel';
 import ConceptShowcase from '@/components/conceptShowcase';
 import Contact from '@/components/contact';
 import Hero from '@/components/hero';
@@ -8,7 +9,7 @@ export default function Home() {
         <>
             <Hero />
             <ConceptShowcase />
-            <Testimonials />
+            <ClientTestimonialsCarousel />
             <Contact />
         </>
     );
