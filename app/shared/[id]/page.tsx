@@ -1,7 +1,8 @@
-import { prisma } from '@/lib/prismaClient';
+import { prisma } from "@/lib/prismaClient";
 import { notFound } from "next/navigation";
 
 export default async function SharedPage({ params }: { params: { id: string } }) {
+  // params est disponible directement ici
   const shared = await prisma.comment.findUnique({
     where: { id: params.id },
     include: { post: true },
