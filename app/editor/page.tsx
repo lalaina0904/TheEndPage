@@ -1845,7 +1845,7 @@ export default function AdvancedEditor() {
                                     type="text"
                                     value={shareUrl}
                                     readOnly
-                                    className="flex-1 border border-gray-300 rounded-l-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    className="flex-1 border border-gray-300 text-black rounded-l-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 />
                                 <button
                                     onClick={copyToClipboard}

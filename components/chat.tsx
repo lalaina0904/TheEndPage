@@ -48,9 +48,7 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col max-w-2xl mx-auto h-screen p-4 bg-black text-white">
-      <h1 className="text-2xl font-semibold text-center mb-4 text-yellow-100">
-        Your Assistant
-      </h1>
+    
 
       <div className="flex-1 overflow-y-auto space-y-4 p-4 border border-neutral-700 rounded-md bg-neutral-900">
         {messages.map((msg, index) => (
@@ -76,7 +74,7 @@ export default function Chat() {
 
       <div className="mt-4 flex gap-2">
         <textarea
-          className="flex-1 resize-none rounded-md border border-neutral-700 p-2 bg-neutral-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+          className="flex-1 resize-none h-[50px] rounded-md border border-neutral-700 p-2 bg-neutral-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
           rows={2}
           placeholder="Tape ton message ici..."
           value={input}

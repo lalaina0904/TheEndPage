@@ -63,19 +63,19 @@ const Hero = () => {
                         variants={fadeUp}>
                         <div className="mb-8 text-xl">
                             <Link
-                                href="/create"
+                                href="/editor"
                                 className=" font-semibold text-[#f1caad] border-b-2 border-[#f1caad] ">
                                 Crée
                             </Link>
                             <span className="mx-4">, </span>
                             <Link
-                                href="/customize"
+                                href="/editor"
                                 className=" font-semibold text-[#f1caad] border-b-2 border-[#f1caad] ">
                                 Personnalise
                             </Link>
                             <span className="mx-4">et</span>
                             <Link
-                                href="/share"
+                                href="/editor"
                                 className=" font-semibold text-[#f1caad] border-b-2 border-[#f1caad] ">
                                 Partage
                             </Link>
