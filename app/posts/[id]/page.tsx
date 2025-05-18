@@ -27,7 +27,16 @@ export default async function PostPage({ params }: { params: { id: string } }) {
         Créé le {format(new Date(post.createdAt), 'dd/MM/yyyy')} par {post.author?.name || 'Utilisateur'}
       </div>
       <div className="prose prose-neutral max-w-none">
-        {post.content || <em>Aucun contenu</em>}
+        {post.content && post.content.startsWith("http") ? (
+          <iframe
+            src={post.content}
+            title={post.title}
+            className="w-full h-[500px] rounded border"
+            sandbox="allow-scripts allow-same-origin"
+          />
+        ) : (
+          post.content || <em>Aucun contenu</em>
+        )}
       </div>
     </main>
   );
