@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const links = [
     { href: '/', label: 'Accueil' },
     { href: '/realisations', label: 'Réalisations' },
-    { href: '/tendances', label: 'Tendances' },
+    { href: '/Hall of Fame', label: 'Hall of Fame' },
 ];
 
 import {
@@ -38,7 +38,7 @@ export default function Nav() {
                 <Link
                     href="/"
                     className="text-xl font-semibold tracking-widest">
-                    THE END.<span className="text-sm font-light">Page</span>
+                    THE END.<span className="text-lg font-light">Page</span>
                 </Link>
 
                 <nav className="hidden md:flex items-center gap-6">
@@ -130,9 +130,28 @@ export default function Nav() {
                                 </Link>
                             ))}
 
-                            <div className="mt-4">
-                                <Button className="w-full">Se connecter</Button>
+                            <div className="flex mt-4">
+                                <div>
+                                    <SignedOut>
+                                        <div className="bg-[#f1caad] rounded-md px-4 py-2 text-[0.9rem] shadow-none cursor-pointer focus:ring-offset-0 focus:ring-0">
+                                            <SignInButton
+                                                forceRedirectUrl={'/'}
+                                                children={
+                                                    <span className="text-neutral-500 uppercase font-semibold">
+                                                        Se connecter
+                                                    </span>
+                                                }
+                                            />
+                                        </div>
+                                    </SignedOut>
+
+                                    <SignedIn>
+                                        <UserButton />
+                                    </SignedIn>
+                                </div>
                             </div>
+
+                            <hr className="border-neutral-600" />
 
                             <div className="mt-4 text-sm space-y-2">
                                 <a
@@ -149,10 +168,17 @@ export default function Nav() {
                             </div>
 
                             <div className="mt-auto pt-10">
-                                <select className="text-sm">
-                                    <option>FR</option>
-                                    <option>EN</option>
-                                </select>
+                                <Select>
+                                    <SelectTrigger className="border-none focus-within:border-none">
+                                        <SelectValue placeholder="FR" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="light">
+                                            FR
+                                        </SelectItem>
+                                        <SelectItem value="dark">EN</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </motion.div>

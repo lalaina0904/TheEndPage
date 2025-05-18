@@ -1,60 +1,66 @@
+'use client';
+
 import Link from 'next/link';
-import React from 'react';
 import { Button } from './ui/button';
 import { FiTrendingUp } from 'react-icons/fi';
-
-import {
-    SignInButton,
-    SignUpButton,
-    SignedIn,
-    SignedOut,
-    UserButton,
-} from '@clerk/nextjs';
-import { Span } from 'next/dist/trace';
-import { Arrow } from '@radix-ui/react-select';
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import { ArrowUpRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 40 },
+    visible: (delay = 0) => ({
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.8, delay },
+    }),
+};
 
 const Hero = () => {
     return (
         <div className="relative w-full h-screen overflow-hidden text-white">
             {/* Background image */}
             <div className="absolute inset-0 z-0 bg_aestetic bg-fixed">
-                {/* <img
-                        src="/bg.png"
-                        alt="Background"
-                        className="object-cover w-full h-full"
-                    /> */}
                 <div className="absolute inset-0 bg-black/65" />
             </div>
 
             {/* Overlay content */}
             <div className="relative z-10 lg:flex gap-6 h-full container mx-auto pb-[10rem]">
                 <section className="flex flex-col w-full space-y-4 justify-center items-baseline mt-[10rem] space-x-4">
-                    <div>
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        custom={0}
+                        variants={fadeUp}>
                         <p className="italic text-3xl mb-14 text-neutral-300">
                             La fin n’est que le début… d’un chef-d'œuvre.
                         </p>
-                        <br />
-                        <div className="text-xl">
-                            <h1 className="text-5xl md:text-6xl tracking-wider mb-8">
-                                THE END.
-                                <span className="text-4xl font-light">
-                                    Page
-                                </span>
-                            </h1>
+                    </motion.div>
 
-                            <p className="uppercase  mb-8">
-                                L'endroit rêver pour créer une page de départ
-                                unique : dramatique, drôle, sincère ou
-                                totalement WTF.
-                            </p>
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        custom={0.2}
+                        variants={fadeUp}>
+                        <h1 className="text-5xl md:text-6xl tracking-wider mb-8">
+                            THE END.
+                            <span className="text-4xl font-light"> Page</span>
+                        </h1>
+                        <p className="uppercase mb-8">
+                            L'endroit rêvé pour créer une page de départ unique
+                            : dramatique, drôle, sincère ou totalement WTF.
+                        </p>
+                        <p className="uppercase mb-8">
+                            Un dernier mot avant de tourner la page ? Ou la
+                            claquer bruyamment ?
+                        </p>
+                    </motion.div>
 
-                            <p className="uppercase mb-8">
-                                Un dernier mot avant de tourner la page ? Ou la
-                                claquer bruyamment.?
-                            </p>
-                        </div>
-
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        custom={0.4}
+                        variants={fadeUp}>
                         <div className="mb-8 text-xl">
                             <Link
                                 href="/create"
@@ -73,36 +79,42 @@ const Hero = () => {
                                 className=" font-semibold text-[#f1caad] border-b-2 border-[#f1caad] ">
                                 Partage
                             </Link>
-                            <span className="mx-4 ">ton histoire !</span>
+                            <span className="mx-4">ton histoire !</span>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    {/* Button */}
-
-                    <div className="mt-8">
-                        <div>
-                            <SignedOut>
-                                <div className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] ">
-                                    <SignInButton
-                                        forceRedirectUrl={'/editor'}
-                                        children={<span>Créer une page</span>}
-                                    />
-                                </div>
-                            </SignedOut>
-                            <SignedIn>
-                                <div className="bg-background/2 tracking-wide backdrop-blur-lg uppercase text-2xl px-8 py-4 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] text-center flex">
-                                    <Link href="/editor">Créer une page</Link>
+                    <motion.div
+                        initial="hidden"
+                        animate="visible"
+                        custom={0.6}
+                        variants={fadeUp}>
+                        <SignedOut>
+                            <div className="bg-background/2 backdrop-blur-lg uppercase text-lg md:text-xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] ">
+                                <SignInButton forceRedirectUrl={'/editor'}>
+                                    <span>Créer une page</span>
                                     <ArrowUpRight size={30} className="ml-2" />
-                                </div>
-                            </SignedIn>
-                        </div>
-                    </div>
+                                </SignInButton>
+                            </div>
+                        </SignedOut>
+
+                        <SignedIn>
+                            <div className="bg-background/2 tracking-wide backdrop-blur-lg uppercase text-lg md:text-xl px-8 py-4 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] text-center flex">
+                                <Link href="/editor">Créer une page</Link>
+                                <ArrowUpRight size={30} className="ml-2" />
+                            </div>
+                        </SignedIn>
+                    </motion.div>
                 </section>
 
-                <section className="flex flex-col justify-center w-max-[6rem] space-y-6 mt-10 lg:mt-[14rem]">
-                    <div className="bg-[#111111ee] shadow-lg rounded-2xl p-6 space-y-4">
+                {/* RIGHT CARDS */}
+                <motion.section
+                    initial="hidden"
+                    animate="visible"
+                    variants={fadeUp}
+                    custom={0.8}
+                    className="flex flex-col justify-center space-y-6 mt-10 lg:mt-[14rem]">
+                    <motion.div className="bg-[#111111ee] shadow-lg rounded-2xl p-6 space-y-4">
                         <h3 className="font-semibold mb-2">Extrait de page</h3>
-                        {/* -- exemple -- */}
                         <div className="text-gray-300">
                             <p>
                                 “Je pars sans rancune, mais avec un certain
@@ -120,11 +132,11 @@ const Hero = () => {
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="bg-[#111111ee] shadow-lg rounded-2xl p-6 text-lg">
+                    <motion.div className="bg-[#111111ee] shadow-lg rounded-2xl p-6 text-lg">
                         <h3 className="font-semibold mb-2 flex items-center gap-2">
-                            <FiTrendingUp className="text-green-400" />{' '}
+                            <FiTrendingUp className="text-green-400" />
                             Statistiques de style
                         </h3>
                         <div className="space-y-2 text-gray-300">
@@ -145,23 +157,28 @@ const Hero = () => {
                                 <span>13%</span>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="bg-[#111111ee] shadow-lg rounded-2xl p-6">
+                    <motion.div className="bg-[#111111ee] shadow-lg rounded-2xl p-6">
                         <h3 className="font-semibold mb-2">Activité récente</h3>
-                        <div className="text-xs text-gray-400">
-                            Pages créées cette semaine :{' '}
-                            <span className="text-white font-bold">+1,124</span>
+                        <div className="text-lg text-gray-400">
+                            Pages créées cette semaine :
+                            <span className="text-white font-bold">
+                                {' '}
+                                +1,124
+                            </span>
                             <br />
                             Partages réseaux :
-                            <span className="text-white font-bold">+2,980</span>
+                            <span className="text-white font-bold">
+                                {' '}
+                                +2,980
+                            </span>
                             <br />
                             Pages supprimées :
-                            <span className="text-white font-bold">8</span>
+                            <span className="text-white font-bold"> 8</span>
                         </div>
-                    </div>
-                </section>
-                {/* <div className="text-white">hehe</div> */}
+                    </motion.div>
+                </motion.section>
             </div>
         </div>
     );

@@ -23,6 +23,7 @@ import {
     NotebookPen,
     TextCursor,
     ImageIcon,
+    HomeIcon,
 } from 'lucide-react';
 import { FaShareSquare } from 'react-icons/fa';
 
@@ -415,11 +416,11 @@ export default function AdvancedEditor() {
             let drawingImgHtml = '';
             if (canvasRef.current) {
                 const drawingDataUrl = canvasRef.current.toDataURL();
-                drawingImgHtml = `<img src="${drawingDataUrl}" style="position:absolute;left:0;top:0;width:800px;height:600px;pointer-events:none;z-index:999;" />`;
+                drawingImgHtml = `<img src="${drawingDataUrl}" style="position:absolute;left:0;top:0;width:800px;height:765px;pointer-events:none;z-index:999;" />`;
             }
 
             const html = `
-       <div style="position:relative;margin:auto;width:800px;height:600px;background:#fff;${styleString}">
+       <div style="position:relative;margin:auto;width:800px;height:765px;background:#fff;${styleString}">
          ${drawingImgHtml}
          ${docData.elements
              .map((el) => {
@@ -952,11 +953,11 @@ export default function AdvancedEditor() {
         let drawingImgHtml = '';
         if (canvasRef.current) {
             const drawingDataUrl = canvasRef.current.toDataURL();
-            drawingImgHtml = `<img src="${drawingDataUrl}" style="position:absolute;left:0;top:0;width:800px;height:600px;pointer-events:none;z-index:999;" />`;
+            drawingImgHtml = `<img src="${drawingDataUrl}" style="position:absolute;left:0;top:0;width:800px;height:765px;pointer-events:none;z-index:999;" />`;
         }
 
         const html = `
-     <div style="position:relative;width:800px;height:600px;background:#fff;${styleString}">
+     <div style="position:relative;width:800px;height:765px;background:#fff;${styleString}">
        ${drawingImgHtml}
        ${docData.elements
            .map((el) => {
@@ -1652,12 +1653,12 @@ export default function AdvancedEditor() {
                 style={{ position: 'relative' }}>
                 <div
                     className="relative mx-auto bg-white rounded-lg shadow-sm border border-gray-200"
-                    style={{ width: 800, height: 600, minHeight: 400 }}>
+                    style={{ width: 800, height: 765, minHeight: 400 }}>
                     {/* Drawing Canvas (au-dessus, pointer-events: none si pas en mode dessin) */}
                     <canvas
                         ref={canvasRef}
                         width={800}
-                        height={600}
+                        height={765}
                         style={{
                             position: 'absolute',
                             left: 0,
@@ -1789,6 +1790,17 @@ export default function AdvancedEditor() {
                 <div>
                     {wordCount} mots • {charCount} caractères
                 </div>
+
+                {/* Revenir sur le home Page */}
+
+                <div className="flex items-center space-x-4">
+                    <button
+                        onClick={() => router.push('/')}
+                        className="px-3 py-1  text-gray-50 uppercase font-medium rounded flex items-center">
+                        <span>Revenir à l'Accueil</span>
+                    </button>
+                </div>
+
                 <div className="flex items-center space-x-4">
                     <select className="text-xs border-none bg-transparent focus:outline-none">
                         <option>100%</option>

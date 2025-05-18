@@ -21,22 +21,16 @@ export default function Footer() {
                 </div>
 
                 {/* Colonne droite : logo + icônes */}
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col gap-2">
                     <div className="text-xl font-semibold tracking-widest">
-                        THE END.<span className="text-sm font-light">Page</span>
+                        THE END.<span className="text-lg font-light">Page</span>
                     </div>
                     <div className="flex space-x-4 text-white">
                         <a href="#" aria-label="Instagram">
-                            <FaInstagram size={16} />
+                            <FaInstagram size={20} />
                         </a>
                         <a href="#" aria-label="LinkedIn">
-                            <FaLinkedin size={16} />
-                        </a>
-                        <a href="#" aria-label="YouTube">
-                            <FaYoutube size={16} />
-                        </a>
-                        <a href="mailto:hello@example.com" aria-label="Email">
-                            <FaEnvelope size={16} />
+                            <FaLinkedin size={20} />
                         </a>
                     </div>
                 </div>
