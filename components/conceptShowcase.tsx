@@ -32,7 +32,7 @@ export default function ConceptCards() {
                     </CardHeader>
                     <CardContent className="mt-2">
                         <Image
-                            src="/images/write-story.png"
+                            src="/stories.png"
                             alt="Écrire son message"
                             width={600}
                             height={300}
@@ -64,7 +64,7 @@ export default function ConceptCards() {
                     </CardHeader>
                     <CardContent className="mt-2">
                         <Image
-                            src="/images/ai-support.png"
+                            src="/chat.png"
                             alt="Chat IA empathique"
                             width={600}
                             height={300}
@@ -86,24 +86,22 @@ export default function ConceptCards() {
                             Participatif
                         </span>
                     </div>
-                    <CardTitle className="text-lg font-semibold">
+                    <CardTitle className="text-lg font-semibold text-gray-50">
                         Découvrez les histoires des autres. Soutenez, commentez.
                     </CardTitle>
                     <p className="text-sm text-white/90">
                         Parcourez une collection d’histoires partagées par des
-                        personnes comme vous. Lisez, commentez, laissez un ❤️ ou
-                        un message de réconfort.
+                        personnes comme vous. Lisez, commentez, laissez un coeur
+                        ou un message de réconfort.
                     </p>
+
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-white/90">
+                            En cours de développement...
+                        </span>
+                        <span className="text-sm text-white/90">🚧</span>
+                    </div>
                 </CardHeader>
-                <CardContent className="mt-2">
-                    <Image
-                        src="/images/community-stories.png"
-                        alt="Liste publique"
-                        width={1200}
-                        height={400}
-                        className="rounded-xl border"
-                    />
-                </CardContent>
             </Card>
         </section>
     );
