@@ -148,6 +148,14 @@ exports.Prisma.CommentScalarFieldEnum = {
   authorId: 'authorId'
 };
 
+exports.Prisma.VoteScalarFieldEnum = {
+  id: 'id',
+  value: 'value',
+  userId: 'userId',
+  postId: 'postId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -179,11 +187,18 @@ exports.Prisma.CommentOrderByRelevanceFieldEnum = {
   authorId: 'authorId'
 };
 
+exports.Prisma.VoteOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  postId: 'postId'
+};
+
 
 exports.Prisma.ModelName = {
   User: 'User',
   Post: 'Post',
-  Comment: 'Comment'
+  Comment: 'Comment',
+  Vote: 'Vote'
 };
 
 /**

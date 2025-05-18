@@ -22,6 +22,7 @@ model User {
   updatedAt DateTime  @updatedAt
   Post      Post[]
   Comment   Comment[]
+  Vote      Vote[]
 }
 
 model Post {
@@ -36,6 +37,7 @@ model Post {
   updatedAt DateTime @updatedAt
 
   Comment Comment[]
+  Vote    Vote[]
 }
 
 model Comment {
@@ -47,4 +49,17 @@ model Comment {
   updatedAt DateTime @updatedAt
   author    User?    @relation(fields: [authorId], references: [id])
   authorId  String?
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  value     Int // de 1 à 5
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId]) // un seul vote par post par utilisateur
 }
