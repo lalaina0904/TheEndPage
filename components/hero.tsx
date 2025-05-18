@@ -80,13 +80,18 @@ const Hero = () => {
                     <div className="mt-8">
                         <div>
                             <SignedOut>
-                                <div className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad]">
+                                <div className="w-xl bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] ">
                                     <SignInButton
                                         forceRedirectUrl={'/editor'}
                                         children={<span>Créer une page</span>}
                                     />
                                 </div>
                             </SignedOut>
+                            <SignedIn>
+                                <div className="bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] text-center">
+                                    <Link href="/editor">Créer une page</Link>
+                                </div>
+                            </SignedIn>
                         </div>
                     </div>
                 </section>

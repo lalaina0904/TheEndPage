@@ -41,9 +41,18 @@ export default function PostsList() {
         {posts.map(post => (
           <div key={post.id} className="bg-white shadow-md rounded-2xl p-4 border hover:shadow-lg transition">
             <h2 className="text-lg font-medium truncate">{post.title}</h2>
-            <p className="text-sm text-gray-500 mt-1 truncate">
-              {post.content || "Aucun contenu"}
-            </p>
+            {post.content && post.content.startsWith("http") ? (
+              <iframe
+                src={post.content}
+                title={post.title}
+                className="w-full h-40 rounded mt-2 border"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            ) : (
+              <p className="text-sm text-gray-500 mt-1 truncate">
+                {post.content || "Aucun contenu"}
+              </p>
+            )}
             <p className="text-xs text-gray-400 mt-2">
               Créé le {new Date(post.createdAt).toLocaleDateString()}
             </p>
