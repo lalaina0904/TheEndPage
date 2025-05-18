@@ -11,6 +11,8 @@ import {
     UserButton,
 } from '@clerk/nextjs';
 import { Span } from 'next/dist/trace';
+import { Arrow } from '@radix-ui/react-select';
+import { ArrowUpRight } from 'lucide-react';
 
 const Hero = () => {
     return (
@@ -26,10 +28,10 @@ const Hero = () => {
             </div>
 
             {/* Overlay content */}
-            <div className="relative z-10 lg:flex gap-6 h-full container mx-auto">
+            <div className="relative z-10 lg:flex gap-6 h-full container mx-auto pb-[10rem]">
                 <section className="flex flex-col w-full space-y-4 justify-center items-baseline mt-[10rem] space-x-4">
                     <div>
-                        <p className="italic text-2xl mb-14">
+                        <p className="italic text-3xl mb-14 text-neutral-300">
                             La fin n’est que le début… d’un chef-d'œuvre.
                         </p>
                         <br />
@@ -88,8 +90,9 @@ const Hero = () => {
                                 </div>
                             </SignedOut>
                             <SignedIn>
-                                <div className="bg-background/2 backdrop-blur-lg uppercase text-2xl p-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] text-center">
+                                <div className="bg-background/2 tracking-wide backdrop-blur-lg uppercase text-2xl px-8 py-4 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] text-center flex">
                                     <Link href="/editor">Créer une page</Link>
+                                    <ArrowUpRight size={30} className="ml-2" />
                                 </div>
                             </SignedIn>
                         </div>

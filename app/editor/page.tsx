@@ -6,21 +6,24 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { Rnd } from 'react-rnd';
 import { error } from 'console';
-import {
-    NotebookPen,
-    AlignLeft,
-    AlignCenter,
-    AlignRight,
-    AlignJustify,
-    TextCursor,
-    ImageIcon,
-} from 'lucide-react';
+import React from 'react';
+import { HiOutlineLightBulb } from 'react-icons/hi';
 
 type StyleSuggestion = {
     description: string;
     css: string;
     tone: string;
 };
+
+import {
+    AlignLeft,
+    AlignCenter,
+    AlignRight,
+    AlignJustify,
+    NotebookPen,
+    TextCursor,
+    ImageIcon,
+} from 'lucide-react';
 
 type Collaborator = { initials: string; [key: string]: any };
 
@@ -45,6 +48,111 @@ type BuilderElement = {
 function camelToKebab(str: string) {
     return str.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase());
 }
+
+// Nouvelle version des templates de disposition avec aperçu visuel façon Canva
+const layoutTemplates = [
+    {
+        name: 'Titre centré + image dessous',
+        apply: (elements: BuilderElement[]) => {
+            let y = 40;
+            return elements.map((el, i) => {
+                if (i === 0 && el.type === 'text') {
+                    return { ...el, x: 250, y, width: 300, height: 60 };
+                }
+                if (i === 1 && (el.type === 'image' || el.type === 'gif')) {
+                    return { ...el, x: 300, y: 120, width: 200, height: 200 };
+                }
+                return el;
+            });
+        },
+        preview: [
+            {
+                x: 20,
+                y: 8,
+                width: 48,
+                height: 12,
+                color: '#c7d2fe',
+                label: 'Titre',
+            },
+            {
+                x: 30,
+                y: 28,
+                width: 32,
+                height: 24,
+                color: '#fbbf24',
+                label: 'Image',
+            },
+        ],
+    },
+    {
+        name: '2 colonnes',
+        apply: (elements: BuilderElement[]) => {
+            return elements.map((el, i) => ({
+                ...el,
+                x: i % 2 === 0 ? 80 : 420,
+                y: 60 + Math.floor(i / 2) * 180,
+                width: 300,
+                height: 120,
+            }));
+        },
+        preview: [
+            {
+                x: 8,
+                y: 12,
+                width: 28,
+                height: 32,
+                color: '#fbbf24',
+                label: 'Bloc',
+            },
+            {
+                x: 44,
+                y: 12,
+                width: 28,
+                height: 32,
+                color: '#c7d2fe',
+                label: 'Bloc',
+            },
+        ],
+    },
+    {
+        name: 'Liste verticale',
+        apply: (elements: BuilderElement[]) => {
+            return elements.map((el, i) => ({
+                ...el,
+                x: 250,
+                y: 40 + i * 120,
+                width: 300,
+                height: 80,
+            }));
+        },
+        preview: [
+            {
+                x: 20,
+                y: 6,
+                width: 40,
+                height: 10,
+                color: '#fbbf24',
+                label: 'Bloc',
+            },
+            {
+                x: 20,
+                y: 20,
+                width: 40,
+                height: 10,
+                color: '#c7d2fe',
+                label: 'Bloc',
+            },
+            {
+                x: 20,
+                y: 34,
+                width: 40,
+                height: 10,
+                color: '#fbbf24',
+                label: 'Bloc',
+            },
+        ],
+    },
+];
 
 export default function AdvancedEditor() {
     const { user } = useUser();
@@ -143,14 +251,12 @@ export default function AdvancedEditor() {
         '48px',
     ];
     const lineHeightOptions = ['1', '1.15', '1.5', '2', '2.5'];
-
     const textAlignOptions = [
         { value: 'left', icon: AlignLeft },
         { value: 'center', icon: AlignCenter },
         { value: 'right', icon: AlignRight },
         { value: 'justify', icon: AlignJustify },
     ];
-
     const toneOptions = [
         { value: 'happy', label: 'Heureux', type: 'mood' },
         { value: 'sad', label: 'Triste', type: 'mood' },
@@ -304,46 +410,53 @@ export default function AdvancedEditor() {
                 .map(([k, v]) => `${camelToKebab(k)}:${v};`)
                 .join('');
 
-            const html = `
-        <div style="position:relative;margin:auto;width:800px;height:600px;${styleString}">
-          ${docData.elements
-              .map((el) => {
-                  let customStyle = '';
-                  if (el.customStyle) {
-                      try {
-                          const parsed = JSON.parse(el.customStyle);
-                          customStyle = Object.entries(parsed)
-                              .map(([k, v]) => `${camelToKebab(k)}:${v};`)
-                              .join('');
-                      } catch {
-                          customStyle = '';
-                      }
-                  }
-                  const baseStyle = `
-              position:relative;
-              left:${el.x}px;top:${el.y}px;
-              width:${el.width}px;height:${el.height}px;
-              ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ''}
-              background:${el.backgroundColor || 'transparent'};
-              font-size:${el.fontSize || '16px'};
-              font-family:${el.fontFamily || 'Arial'};
-              color:${el.textColor || '#000'};
-              font-weight:500;
-              ${customStyle}
-            `;
-                  if (el.type === 'text') {
-                      return `<div style="${baseStyle}" >${escapeHtml(
-                          el.content || ''
-                      )}</div>`;
-                  } else if (el.type === 'image' || el.type === 'gif') {
-                      return `<img src="${el.src}" style="${baseStyle}" />`;
-                  }
-                  return '';
-              })
-              .join('')}
-        </div>
-      `;
+            // Ajoute le dessin comme image si présent
+            let drawingImgHtml = '';
+            if (canvasRef.current) {
+                const drawingDataUrl = canvasRef.current.toDataURL();
+                drawingImgHtml = `<img src="${drawingDataUrl}" style="position:absolute;left:0;top:0;width:800px;height:600px;pointer-events:none;z-index:999;" />`;
+            }
 
+            const html = `
+       <div style="position:relative;margin:auto;width:800px;height:600px;background:#fff;${styleString}">
+         ${drawingImgHtml}
+         ${docData.elements
+             .map((el) => {
+                 let customStyle = '';
+                 if (el.customStyle) {
+                     try {
+                         const parsed = JSON.parse(el.customStyle);
+                         customStyle = Object.entries(parsed)
+                             .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+                             .join('');
+                     } catch {
+                         customStyle = '';
+                     }
+                 }
+                 const baseStyle = `
+             position:relative;
+             left:${el.x}px;top:${el.y}px;
+             width:${el.width}px;height:${el.height}px;
+             ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ''}
+             background:${el.backgroundColor || 'transparent'};
+             font-size:${el.fontSize || '16px'};
+             font-family:${el.fontFamily || 'Arial'};
+             color:${el.textColor || '#000'};
+             font-weight:500;
+             ${customStyle}
+           `;
+                 if (el.type === 'text') {
+                     return `<div style="${baseStyle}" >${escapeHtml(
+                         el.content || ''
+                     )}</div>`;
+                 } else if (el.type === 'image' || el.type === 'gif') {
+                     return `<img src="${el.src}" style="${baseStyle}" />`;
+                 }
+                 return '';
+             })
+             .join('')}
+       </div>
+     `;
             // 2. Uploader le HTML sur S3 via /api/upload
             const blob = new Blob([html], { type: 'text/html' });
             const formData = new FormData();
@@ -359,34 +472,26 @@ export default function AdvancedEditor() {
                 method: 'POST',
                 body: formData,
             });
-
             if (!uploadRes.ok) throw new Error();
-
             const { filename } = await uploadRes.json();
             // Génère l'URL S3 (adapte selon ta config, ici bucket public)
             const s3Url = `https://${process.env.NEXT_PUBLIC_AWS_BUCKET_NAME}.s3.amazonaws.com/${filename}`;
-
             // 3. Enregistre le post avec l'URL S3 comme content
             const res = await fetch('/api/posts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...docData, content: s3Url }),
             });
-
             if (!res.ok) throw new Error("Échec de l'enregistrement");
-
             const data = await res.json();
             const postId = data.post.id;
-
             // 4. Génère le lien de partage
             const shareRes = await fetch('/api/share', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ postId }),
             });
-
             if (!shareRes.ok) throw new Error('Échec de la génération du lien');
-
             const shareData = await shareRes.json();
             const generatedUrl = `${window.location.origin}/shared/${shareData.id}`;
             setShareUrl(s3Url);
@@ -747,7 +852,157 @@ export default function AdvancedEditor() {
         }));
     };
 
-    //
+    // Ajoute la suppression d'un élément
+    const deleteElement = (idx: number) => {
+        setDocData((prev) => ({
+            ...prev,
+            elements: prev.elements.filter((_, i) => i !== idx),
+        }));
+        setSelectedElementIdx(null);
+    };
+
+    // --- FONCTIONNALITÉ DESSIN ---
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [drawColor, setDrawColor] = useState('#ff0000');
+    const [drawSize, setDrawSize] = useState(4);
+    const [drawingMode, setDrawingMode] = useState(false);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [canvasData, setCanvasData] = useState<string | null>(null);
+
+    // Gestion du dessin
+    const handleStartDraw = (
+        e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
+    ) => {
+        if (!drawingMode) return;
+        setIsDrawing(true);
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.beginPath();
+        const rect = canvas.getBoundingClientRect();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    };
+
+    const handleDraw = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+        if (!isDrawing || !drawingMode) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.strokeStyle = drawColor;
+        ctx.lineWidth = drawSize;
+        ctx.lineCap = 'round';
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+    };
+
+    const handleEndDraw = () => {
+        if (!drawingMode) return;
+        setIsDrawing(false);
+        // Sauvegarde le dessin pour l'export
+        const canvas = canvasRef.current;
+        if (canvas) {
+            setCanvasData(canvas.toDataURL());
+        }
+    };
+
+    const handleClearCanvas = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        setCanvasData(null);
+    };
+
+    // Restaure le dessin si canvasData existe
+    useEffect(() => {
+        if (canvasData && canvasRef.current) {
+            const img = new window.Image();
+            img.onload = () => {
+                const ctx = canvasRef.current!.getContext('2d');
+                if (ctx) ctx.drawImage(img, 0, 0);
+            };
+            img.src = canvasData;
+        }
+    }, [canvasData]);
+
+    // ...reste du code existant...
+
+    // --- MODIFICATION EXPORT HTML POUR INCLURE LE DESSIN ---
+    const handleExportHtml = () => {
+        const escapeHtml = (unsafe: string) =>
+            unsafe
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;')
+                .replace(/\n/g, '<br>');
+
+        const styleObj = docData.style ? JSON.parse(docData.style) : {};
+        const styleString = Object.entries(styleObj)
+            .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+            .join('');
+
+        // Ajoute le dessin comme image si présent
+        let drawingImgHtml = '';
+        if (canvasRef.current) {
+            const drawingDataUrl = canvasRef.current.toDataURL();
+            drawingImgHtml = `<img src="${drawingDataUrl}" style="position:absolute;left:0;top:0;width:800px;height:600px;pointer-events:none;z-index:999;" />`;
+        }
+
+        const html = `
+     <div style="position:relative;width:800px;height:600px;background:#fff;${styleString}">
+       ${drawingImgHtml}
+       ${docData.elements
+           .map((el) => {
+               let customStyle = '';
+               if (el.customStyle) {
+                   try {
+                       const parsed = JSON.parse(el.customStyle);
+                       customStyle = Object.entries(parsed)
+                           .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+                           .join('');
+                   } catch {
+                       customStyle = '';
+                   }
+               }
+               const baseStyle = `
+           position:absolute;
+           left:${el.x}px;top:${el.y}px;
+           width:${el.width}px;height:${el.height}px;
+           ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ''}
+           background:${el.backgroundColor || 'transparent'};
+           font-size:${el.fontSize || '16px'};
+           font-family:${el.fontFamily || 'Arial'};
+           color:${el.textColor || '#000'};
+           font-weight:500;
+           ${customStyle}
+         `;
+               if (el.type === 'text') {
+                   return `<div style="${baseStyle}" >${escapeHtml(
+                       el.content || ''
+                   )}</div>`;
+               } else if (el.type === 'image' || el.type === 'gif') {
+                   return `<img src="${el.src}" style="${baseStyle}" />`;
+               }
+               return '';
+           })
+           .join('')}
+     </div>
+   `;
+
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${docData.title || 'export'}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <div className="flex flex-col h-screen bg-[#272a2b]">
@@ -774,7 +1029,7 @@ export default function AdvancedEditor() {
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center">
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center">
                         {loading ? (
                             <svg
                                 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
@@ -810,81 +1065,11 @@ export default function AdvancedEditor() {
                         )}
                         Partager
                     </button>
-                    <button
-                        onClick={() => {
-                            // Fonction pour échapper le texte
-                            const escapeHtml = (unsafe: string) =>
-                                unsafe
-                                    .replace(/&/g, '&amp;')
-                                    .replace(/</g, '&lt;')
-                                    .replace(/>/g, '&gt;')
-                                    .replace(/"/g, '&quot;')
-                                    .replace(/'/g, '&#039;')
-                                    .replace(/\n/g, '<br>');
-
-                            // Correction : conversion camelCase -> kebab-case pour le style IA global
-                            const styleObj = docData.style
-                                ? JSON.parse(docData.style)
-                                : {};
-                            const styleString = Object.entries(styleObj)
-                                .map(([k, v]) => `${camelToKebab(k)}:${v};`)
-                                .join('');
-
-                            const html = `
-      <div  style="position:relative;width:800px;height:600px;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;${styleString}">
-        ${docData.elements
-            .map((el) => {
-                // Correction : conversion camelCase -> kebab-case pour customStyle
-                let customStyle = '';
-                if (el.customStyle) {
-                    try {
-                        const parsed = JSON.parse(el.customStyle);
-                        customStyle = Object.entries(parsed)
-                            .map(([k, v]) => `${camelToKebab(k)}:${v};`)
-                            .join('');
-                    } catch {
-                        customStyle = '';
-                    }
-                }
-                const baseStyle = `
-            position:relative;
-            left:${el.x}px;top:${el.y}px;
-            width:${el.width}px;height:${el.height}px;
-            ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ''}
-            background:${el.backgroundColor || 'transparent'};
-            font-size:${el.fontSize || '16px'};
-            font-family:${el.fontFamily || 'Arial'};
-            color:${el.textColor || '#000'};
-            font-weight:500;
-            ${customStyle}
-          `;
-                if (el.type === 'text') {
-                    return `<div style="${baseStyle}" >${escapeHtml(
-                        el.content || ''
-                    )}</div>`;
-                } else if (el.type === 'image' || el.type === 'gif') {
-                    return `<img src="${el.src}" style="${baseStyle}" />`;
-                }
-                return '';
-            })
-            .join('')}
-      </div>
-    `;
-
-                            // Téléchargement du HTML
-                            const blob = new Blob([html], {
-                                type: 'text/html',
-                            });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `${docData.title || 'export'}.html`;
-                            a.click();
-                            URL.revokeObjectURL(url);
-                        }}
+                    {/* <button
+                        onClick={handleExportHtml}
                         className="px-3 py-1 bg-green-600 text-white rounded ml-2">
                         Exporter en HTML
-                    </button>
+                    </button> */}
                 </div>
             </header>
 
@@ -925,33 +1110,17 @@ export default function AdvancedEditor() {
                         ))}
                     </select>
 
-                    <div className="border-l border-gray-300 h-6 mx-1"></div>
+                    <div className="border-l border-gray-300 h-6 mx-2"></div>
 
                     {/* Suggestions de style IA */}
                     <button
                         onClick={getStyleSuggestions}
                         disabled={isAILoading}
-                        className={`p-2 rounded hover:bg-gray-100 flex items-center ${
+                        className={`px-2 py-1 rounded hover:bg-gray-100 flex items-center ${
                             isAILoading ? 'opacity-50' : ''
-                        }`}>
+                        } text-red-600 border border-red-600`}>
                         {isAILoading ? (
-                            <svg
-                                className="animate-spin h-5 w-5 text-gray-500"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24">
-                                <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"></circle>
-                                <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                            <HiOutlineLightBulb size={20} />
                         ) : (
                             <>
                                 <svg
@@ -1341,11 +1510,11 @@ export default function AdvancedEditor() {
             <div className="flex space-x-2 px-4 py-2 bg-[#191d1e] border-b">
                 <button
                     onClick={addTextElement}
-                    className="px-3 bg-[#f1caad] text-gray-700 uppercase font-medium rounded flex items-center">
+                    className="px-3 bg-[#f1caad] text-gray-600 uppercase font-medium rounded flex items-center">
                     <TextCursor size={16} className="mr-1" /> <span>Texte</span>
                 </button>
-                <label className="px-3 py-1 bg-[#f1caad] text-gray-700 uppercase font-medium rounded cursor-pointer flex items-center">
-                    <ImageIcon size={16} className="mr-1" /> <span>Image</span>
+                <label className="px-3 py-1 bg-[#f1caad] text-gray-600 uppercase font-medium rounded cursor-pointer flex flex items-center">
+                    <ImageIcon size={16} className="mr-1" /> <span>image</span>
                     <input
                         type="file"
                         accept="image/*"
@@ -1355,27 +1524,28 @@ export default function AdvancedEditor() {
                 </label>
                 <button
                     onClick={() => setShowGifSearch(true)}
-                    className="px-3 py-1 bg-[#f1caad] text-gray-700 uppercase font-medium rounded">
-                    GIF
+                    className="px-3 py-1 bg-[#f1caad] text-gray-600 uppercase font-medium rounded flex items-center">
+                    <ImageIcon size={16} className="mr-1" /> <span>GIF</span>
                 </button>
             </div>
 
             {/* Toolbar de l'élément sélectionné */}
             {selectedElementIdx !== null && (
-                <div className="flex items-center space-x-2 bg-[#f1caad] border p-2 rounded mb-2">
-                    <span className="text-xs text-gray-500">
+                <div className="flex items-center space-x-2 bg-[#13100e] border p-2 rounded mb-2">
+                    <span className="text-sm text-gray-50">
                         Élément sélectionné :
                     </span>
                     <button
                         onClick={() => rotateSelectedElement(-15)}
-                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                        className="px-2 py-1 bg-gray-400 rounded hover:bg-gray-300">
                         ⟲ -15°
                     </button>
                     <button
                         onClick={() => rotateSelectedElement(15)}
-                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                        className="px-2 py-1 bg-gray-400 rounded hover:bg-gray-300">
                         ⟳ +15°
                     </button>
+
                     <select
                         value={
                             docData.elements[selectedElementIdx]?.fontSize ||
@@ -1384,13 +1554,17 @@ export default function AdvancedEditor() {
                         onChange={(e) =>
                             changeSelectedElementFontSize(e.target.value)
                         }
-                        className="text-xs border rounded px-2 py-1">
+                        className="text-xs border rounded px-2 py-1 ">
                         {fontSizeOptions.map((size) => (
-                            <option key={size} value={size}>
+                            <option
+                                key={size}
+                                value={size}
+                                className="text-red-800">
                                 {size.replace('px', '')}
                             </option>
                         ))}
                     </select>
+
                     <input
                         type="color"
                         value={
@@ -1413,102 +1587,191 @@ export default function AdvancedEditor() {
                         }
                         title="Couleur de fond"
                     />
+                    <button
+                        onClick={() => deleteElement(selectedElementIdx)}
+                        className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                        title="Supprimer l'élément">
+                        Supprimer
+                    </button>
                 </div>
             )}
 
+            {/* DRAWING TOOLBAR */}
+            <div>
+                <p>DESSINS</p>
+                <div className="flex items-center space-x-2 p-2 bg-transparent border-y-2 ">
+                    <button
+                        onClick={() => setDrawingMode(!drawingMode)}
+                        className={`px-3 py-1 rounded ${
+                            drawingMode
+                                ? 'bg-green-600 text-white'
+                                : 'bg-gray-500'
+                        }`}>
+                        {drawingMode ? 'Désactiver' : 'Activer'}
+                    </button>
+                    <label className="flex items-center space-x-1">
+                        <span className="text-xs">Couleur :</span>
+                        <input
+                            type="color"
+                            value={drawColor}
+                            onChange={(e) => setDrawColor(e.target.value)}
+                            disabled={!drawingMode}
+                        />
+                    </label>
+                    <label className="flex items-center space-x-1">
+                        <span className="text-xs">Taille :</span>
+                        <input
+                            type="range"
+                            min={1}
+                            max={24}
+                            value={drawSize}
+                            onChange={(e) =>
+                                setDrawSize(Number(e.target.value))
+                            }
+                            disabled={!drawingMode}
+                        />
+                        <span className="text-xs">{drawSize}px</span>
+                    </label>
+                    <button
+                        onClick={handleClearCanvas}
+                        className="px-2 py-1 bg-red-500 text-white rounded"
+                        disabled={!drawingMode}>
+                        Effacer
+                    </button>
+                </div>
+            </div>
             {/* PAGE BUILDER CANVAS */}
-            <div className="flex-1 overflow-auto p-8">
+            <div
+                className="flex-1 overflow-auto p-8"
+                style={{ position: 'relative' }}>
                 <div
                     className="relative mx-auto bg-white rounded-lg shadow-sm border border-gray-200"
                     style={{ width: 800, height: 600, minHeight: 400 }}>
-                    {docData.elements.map((el, idx) => (
-                        <Rnd
-                            key={el.id}
-                            size={{ width: el.width, height: el.height }}
-                            position={{ x: el.x, y: el.y }}
-                            onDragStop={(_: any, d: { x: any; y: any }) =>
-                                updateElement(idx, { x: d.x, y: d.y })
-                            }
-                            onResizeStop={(
-                                _: any,
-                                __: any,
-                                ref: {
-                                    style: { width: string; height: string };
-                                },
-                                delta: any,
-                                position: Partial<BuilderElement>
-                            ) =>
-                                updateElement(idx, {
-                                    width: parseInt(ref.style.width),
-                                    height: parseInt(ref.style.height),
-                                    ...position,
-                                })
-                            }
-                            bounds="parent"
-                            minWidth={40}
-                            minHeight={30}
-                            onClick={() => selectElement(idx)}
-                            style={{
-                                zIndex: selectedElementIdx === idx ? 10 : 1,
-                                border:
-                                    selectedElementIdx === idx
-                                        ? '2px solid #2563eb'
-                                        : undefined,
-                                background: el.backgroundColor || 'transparent',
-                            }}>
-                            {el.type === 'text' ? (
-                                <textarea
-                                    className="w-full h-full border resize-none bg-transparent"
-                                    value={el.content}
-                                    onChange={(e) =>
-                                        updateElement(idx, {
-                                            content: e.target.value,
-                                        })
-                                    }
-                                    style={{
-                                        fontSize:
-                                            el.fontSize || docData.fontSize,
-                                        fontFamily:
-                                            el.fontFamily || docData.fontFamily,
-                                        color:
-                                            el.textColor || docData.textColor,
-                                        backgroundColor:
-                                            el.backgroundColor || 'transparent',
-                                        fontWeight: 500,
-                                        ...(el.customStyle
-                                            ? JSON.parse(el.customStyle)
-                                            : {}),
-                                        transform: el.rotation
-                                            ? `rotate(${el.rotation}deg)`
+                    {/* Drawing Canvas (au-dessus, pointer-events: none si pas en mode dessin) */}
+                    <canvas
+                        ref={canvasRef}
+                        width={800}
+                        height={600}
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            zIndex: 20,
+                            pointerEvents: drawingMode ? 'auto' : 'none',
+                            background: 'transparent',
+                        }}
+                        onMouseDown={handleStartDraw}
+                        onMouseMove={handleDraw}
+                        onMouseUp={handleEndDraw}
+                        onMouseLeave={handleEndDraw}
+                    />
+                    {/* Elements existants */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            width: 800,
+                            height: 600,
+                            zIndex: 10,
+                        }}>
+                        {docData.elements.map((el, idx) => (
+                            <Rnd
+                                key={el.id}
+                                size={{ width: el.width, height: el.height }}
+                                position={{ x: el.x, y: el.y }}
+                                onDragStop={(_: any, d: { x: any; y: any }) =>
+                                    updateElement(idx, { x: d.x, y: d.y })
+                                }
+                                onResizeStop={(
+                                    _: any,
+                                    __: any,
+                                    ref: {
+                                        style: {
+                                            width: string;
+                                            height: string;
+                                        };
+                                    },
+                                    delta: any,
+                                    position: Partial<BuilderElement>
+                                ) =>
+                                    updateElement(idx, {
+                                        width: parseInt(ref.style.width),
+                                        height: parseInt(ref.style.height),
+                                        ...position,
+                                    })
+                                }
+                                bounds="parent"
+                                minWidth={40}
+                                minHeight={30}
+                                onClick={() => selectElement(idx)}
+                                style={{
+                                    zIndex: selectedElementIdx === idx ? 10 : 1,
+                                    border:
+                                        selectedElementIdx === idx
+                                            ? '2px solid #2563eb'
                                             : undefined,
-                                    }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        selectElement(idx);
-                                    }}
-                                />
-                            ) : (
-                                <img
-                                    src={el.src}
-                                    alt=""
-                                    className="w-full h-full object-contain rounded"
-                                    draggable={false}
-                                    style={{
-                                        pointerEvents: 'none',
-                                        background:
-                                            el.backgroundColor || 'transparent',
-                                        transform: el.rotation
-                                            ? `rotate(${el.rotation}deg)`
-                                            : undefined,
-                                    }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        selectElement(idx);
-                                    }}
-                                />
-                            )}
-                        </Rnd>
-                    ))}
+                                    background:
+                                        el.backgroundColor || 'transparent',
+                                }}>
+                                {el.type === 'text' ? (
+                                    <textarea
+                                        className="w-full h-full border resize-none bg-transparent"
+                                        value={el.content}
+                                        onChange={(e) =>
+                                            updateElement(idx, {
+                                                content: e.target.value,
+                                            })
+                                        }
+                                        style={{
+                                            fontSize:
+                                                el.fontSize || docData.fontSize,
+                                            fontFamily:
+                                                el.fontFamily ||
+                                                docData.fontFamily,
+                                            color:
+                                                el.textColor ||
+                                                docData.textColor,
+                                            backgroundColor:
+                                                el.backgroundColor ||
+                                                'transparent',
+                                            fontWeight: 500,
+                                            ...(el.customStyle
+                                                ? JSON.parse(el.customStyle)
+                                                : {}),
+                                            transform: el.rotation
+                                                ? `rotate(${el.rotation}deg)`
+                                                : undefined,
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            selectElement(idx);
+                                        }}
+                                    />
+                                ) : (
+                                    <img
+                                        src={el.src}
+                                        alt=""
+                                        className="w-full h-full object-contain rounded"
+                                        draggable={false}
+                                        style={{
+                                            pointerEvents: 'none',
+                                            background:
+                                                el.backgroundColor ||
+                                                'transparent',
+                                            transform: el.rotation
+                                                ? `rotate(${el.rotation}deg)`
+                                                : undefined,
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            selectElement(idx);
+                                        }}
+                                    />
+                                )}
+                            </Rnd>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -1565,7 +1828,7 @@ export default function AdvancedEditor() {
                                 />
                                 <button
                                     onClick={copyToClipboard}
-                                    className="bg-blue-500 text-white px-3 py-2 rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm">
+                                    className="bg-blue-600 text-white px-3 py-2 rounded-r-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm">
                                     {isCopied ? 'Copié!' : 'Copier'}
                                 </button>
                             </div>
@@ -1634,7 +1897,7 @@ export default function AdvancedEditor() {
                                         onClick={() =>
                                             applyStyle(suggestion.css)
                                         }
-                                        className="w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-700">
+                                        className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                                         Appliquer ce style
                                     </button>
                                 </div>
@@ -1653,15 +1916,15 @@ export default function AdvancedEditor() {
 
             {/* GIF Search Dialog */}
             {showGifSearch && (
-                <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-4 max-w-lg w-full text-xl">
+                <div className="fixed inset-0 bg-black/40 bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-4 max-w-lg w-full">
                         <div className="flex mb-2">
                             <input
                                 type="text"
                                 value={gifQuery}
                                 onChange={(e) => setGifQuery(e.target.value)}
                                 placeholder="Rechercher un GIF"
-                                className="flex-1 border rounded px-2 py-1 placeholder:text-gray-500 placeholder:italic"
+                                className="flex-1 border rounded px-2 py-1"
                             />
                             <button
                                 onClick={() => searchGifs(gifQuery)}
@@ -1692,6 +1955,53 @@ export default function AdvancedEditor() {
                     </div>
                 </div>
             )}
+
+            {/* Templates de disposition façon Canva */}
+            <div className="flex items-center space-x-4 p-4 bg-gray-100 border-b">
+                <span className="text-xs text-gray-500">
+                    Templates de disposition :
+                </span>
+                {layoutTemplates.map((tpl, i) => (
+                    <button
+                        key={tpl.name}
+                        onClick={() =>
+                            setDocData((prev) => ({
+                                ...prev,
+                                elements: tpl.apply(prev.elements),
+                            }))
+                        }
+                        className="flex flex-col items-center px-2 py-1 rounded hover:bg-blue-100 border border-transparent hover:border-blue-400 transition"
+                        title={tpl.name}>
+                        {/* Miniature de la disposition */}
+                        <div className="relative w-20 h-14 bg-white border rounded shadow-sm mb-1 overflow-hidden">
+                            {tpl.preview.map((block, idx) => (
+                                <div
+                                    key={idx}
+                                    className="absolute rounded"
+                                    style={{
+                                        left: `${block.x}%`,
+                                        top: `${block.y}%`,
+                                        width: `${block.width}%`,
+                                        height: `${block.height}%`,
+                                        background: block.color,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: 10,
+                                        color: '#222',
+                                        fontWeight: 600,
+                                        border: '1px solid #ddd',
+                                    }}>
+                                    {block.label}
+                                </div>
+                            ))}
+                        </div>
+                        <span className="text-[11px] text-gray-700">
+                            {tpl.name}
+                        </span>
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }
