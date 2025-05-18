@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { Rnd } from "react-rnd";
 import { error } from "console";
+import React from "react";
 
 type StyleSuggestion = {
   description: string;
@@ -231,8 +232,16 @@ export default function AdvancedEditor() {
         .map(([k, v]) => `${camelToKebab(k)}:${v};`)
         .join("");
   
+      // Ajoute le dessin comme image si présent
+      let drawingImgHtml = "";
+      if (canvasRef.current) {
+        const drawingDataUrl = canvasRef.current.toDataURL();
+        drawingImgHtml = `<img src="${drawingDataUrl}" style="position:absolute;left:0;top:0;width:800px;height:600px;pointer-events:none;z-index:999;" />`;
+      }
+
       const html = `
         <div style="position:relative;margin:auto;width:800px;height:600px;background:#fff;${styleString}">
+          ${drawingImgHtml}
           ${docData.elements.map(el => {
             let customStyle = "";
             if (el.customStyle) {
@@ -658,10 +667,150 @@ export default function AdvancedEditor() {
     }));
   };
 
-  //
+  // --- FONCTIONNALITÉ DESSIN ---
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawColor, setDrawColor] = useState("#ff0000");
+  const [drawSize, setDrawSize] = useState(4);
+  const [drawingMode, setDrawingMode] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [canvasData, setCanvasData] = useState<string | null>(null);
 
+  // Gestion du dessin
+  const handleStartDraw = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    if (!drawingMode) return;
+    setIsDrawing(true);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.beginPath();
+    const rect = canvas.getBoundingClientRect();
+    ctx.moveTo(
+      e.clientX - rect.left,
+      e.clientY - rect.top
+    );
+  };
 
+  const handleDraw = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    if (!isDrawing || !drawingMode) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.strokeStyle = drawColor;
+    ctx.lineWidth = drawSize;
+    ctx.lineCap = "round";
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineTo(
+      e.clientX - rect.left,
+      e.clientY - rect.top
+    );
+    ctx.stroke();
+  };
 
+  const handleEndDraw = () => {
+    if (!drawingMode) return;
+    setIsDrawing(false);
+    // Sauvegarde le dessin pour l'export
+    const canvas = canvasRef.current;
+    if (canvas) {
+      setCanvasData(canvas.toDataURL());
+    }
+  };
+
+  const handleClearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setCanvasData(null);
+  };
+
+  // Restaure le dessin si canvasData existe
+  useEffect(() => {
+    if (canvasData && canvasRef.current) {
+      const img = new window.Image();
+      img.onload = () => {
+        const ctx = canvasRef.current!.getContext("2d");
+        if (ctx) ctx.drawImage(img, 0, 0);
+      };
+      img.src = canvasData;
+    }
+  }, [canvasData]);
+
+  // ...reste du code existant...
+
+  // --- MODIFICATION EXPORT HTML POUR INCLURE LE DESSIN ---
+  const handleExportHtml = () => {
+    const escapeHtml = (unsafe: string) =>
+      unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+        .replace(/\n/g, "<br>");
+
+    const styleObj = docData.style ? JSON.parse(docData.style) : {};
+    const styleString = Object.entries(styleObj)
+      .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+      .join("");
+
+    // Ajoute le dessin comme image si présent
+    let drawingImgHtml = "";
+    if (canvasRef.current) {
+      const drawingDataUrl = canvasRef.current.toDataURL();
+      drawingImgHtml = `<img src="${drawingDataUrl}" style="position:absolute;left:0;top:0;width:800px;height:600px;pointer-events:none;z-index:999;" />`;
+    }
+
+    const html = `
+      <div style="position:relative;width:800px;height:600px;background:#fff;${styleString}">
+        ${drawingImgHtml}
+        ${docData.elements.map(el => {
+          let customStyle = "";
+          if (el.customStyle) {
+            try {
+              const parsed = JSON.parse(el.customStyle);
+              customStyle = Object.entries(parsed)
+                .map(([k, v]) => `${camelToKebab(k)}:${v};`)
+                .join("");
+            } catch {
+              customStyle = "";
+            }
+          }
+          const baseStyle = `
+            position:absolute;
+            left:${el.x}px;top:${el.y}px;
+            width:${el.width}px;height:${el.height}px;
+            ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ""}
+            background:${el.backgroundColor || "transparent"};
+            font-size:${el.fontSize || "16px"};
+            font-family:${el.fontFamily || "Arial"};
+            color:${el.textColor || "#000"};
+            font-weight:500;
+            ${customStyle}
+          `;
+          if (el.type === "text") {
+            return `<div style="${baseStyle}" >${escapeHtml(el.content || "")}</div>`;
+          } else if (el.type === "image" || el.type === "gif") {
+            return `<img src="${el.src}" style="${baseStyle}" />`;
+          }
+          return "";
+        }).join("")}
+      </div>
+    `;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${docData.title || "export"}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // ...return JSX...
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
@@ -709,69 +858,7 @@ export default function AdvancedEditor() {
             Partager
           </button>
           <button
-  onClick={() => {
-    // Fonction pour échapper le texte
-    const escapeHtml = (unsafe: string) =>
-      unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;")
-        .replace(/\n/g, "<br>");
-
-    // Correction : conversion camelCase -> kebab-case pour le style IA global
-    const styleObj = docData.style ? JSON.parse(docData.style) : {};
-    const styleString = Object.entries(styleObj)
-      .map(([k, v]) => `${camelToKebab(k)}:${v};`)
-      .join("");
-
-    const html = `
-      <div  style="position:relative;width:800px;height:600px;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;${styleString}">
-        ${docData.elements.map(el => {
-          // Correction : conversion camelCase -> kebab-case pour customStyle
-          let customStyle = "";
-          if (el.customStyle) {
-            try {
-              const parsed = JSON.parse(el.customStyle);
-              customStyle = Object.entries(parsed)
-                .map(([k, v]) => `${camelToKebab(k)}:${v};`)
-                .join("");
-            } catch {
-              customStyle = "";
-            }
-          }
-          const baseStyle = `
-            position:relative;
-            left:${el.x}px;top:${el.y}px;
-            width:${el.width}px;height:${el.height}px;
-            ${el.rotation ? `transform:rotate(${el.rotation}deg);` : ""}
-            background:${el.backgroundColor || "transparent"};
-            font-size:${el.fontSize || "16px"};
-            font-family:${el.fontFamily || "Arial"};
-            color:${el.textColor || "#000"};
-            font-weight:500;
-            ${customStyle}
-          `;
-          if (el.type === "text") {
-            return `<div style="${baseStyle}" >${escapeHtml(el.content || "")}</div>`;
-          } else if (el.type === "image" || el.type === "gif") {
-            return `<img src="${el.src}" style="${baseStyle}" />`;
-          }
-          return "";
-        }).join("")}
-      </div>
-    `;
-
-    // Téléchargement du HTML
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${docData.title || "export"}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }}
+  onClick={handleExportHtml}
   className="px-3 py-1 bg-green-600 text-white rounded ml-2"
 >
   Exporter en HTML
@@ -1126,67 +1213,132 @@ export default function AdvancedEditor() {
         </div>
       )}
 
+      {/* DRAWING TOOLBAR */}
+      <div className="flex items-center space-x-2 p-2 bg-gray-100 border-b">
+        <button
+          onClick={() => setDrawingMode(!drawingMode)}
+          className={`px-3 py-1 rounded ${drawingMode ? "bg-green-600 text-white" : "bg-gray-200"}`}
+        >
+          {drawingMode ? "Désactiver le dessin" : "Activer le dessin"}
+        </button>
+        <label className="flex items-center space-x-1">
+          <span className="text-xs">Couleur :</span>
+          <input
+            type="color"
+            value={drawColor}
+            onChange={e => setDrawColor(e.target.value)}
+            disabled={!drawingMode}
+          />
+        </label>
+        <label className="flex items-center space-x-1">
+          <span className="text-xs">Taille :</span>
+          <input
+            type="range"
+            min={1}
+            max={24}
+            value={drawSize}
+            onChange={e => setDrawSize(Number(e.target.value))}
+            disabled={!drawingMode}
+          />
+          <span className="text-xs">{drawSize}px</span>
+        </label>
+        <button
+          onClick={handleClearCanvas}
+          className="px-2 py-1 bg-red-500 text-white rounded"
+          disabled={!drawingMode}
+        >
+          Effacer
+        </button>
+        <button
+          onClick={handleExportHtml}
+          className="px-3 py-1 bg-green-600 text-white rounded ml-2"
+        >
+          Exporter en HTML
+        </button>
+      </div>
+
       {/* PAGE BUILDER CANVAS */}
-      <div className="flex-1 overflow-auto p-8">
+      <div className="flex-1 overflow-auto p-8" style={{ position: "relative" }}>
         <div
           className="relative mx-auto bg-white rounded-lg shadow-sm border border-gray-200"
           style={{ width: 800, height: 600, minHeight: 400 }}
         >
-          {docData.elements.map((el, idx) => (
-            <Rnd
-              key={el.id}
-              size={{ width: el.width, height: el.height }}
-              position={{ x: el.x, y: el.y }}
-              onDragStop={(_: any, d: { x: any; y: any; }) => updateElement(idx, { x: d.x, y: d.y })}
-              onResizeStop={(_: any, __: any, ref: { style: { width: string; height: string; }; }, delta: any, position: Partial<BuilderElement>) =>
-                updateElement(idx, {
-                  width: parseInt(ref.style.width),
-                  height: parseInt(ref.style.height),
-                  ...position,
-                })
-              }
-              bounds="parent"
-              minWidth={40}
-              minHeight={30}
-              onClick={() => selectElement(idx)}
-              style={{
-                zIndex: selectedElementIdx === idx ? 10 : 1,
-                border: selectedElementIdx === idx ? "2px solid #2563eb" : undefined,
-                background: el.backgroundColor || "transparent",
-              }}
-            >
-              {el.type === "text" ? (
-                <textarea
-                  className="w-full h-full border resize-none bg-transparent"
-                  value={el.content}
-                  onChange={e => updateElement(idx, { content: e.target.value })}
-                  style={{
-                    fontSize: el.fontSize || docData.fontSize,
-                    fontFamily: el.fontFamily || docData.fontFamily,
-                    color: el.textColor || docData.textColor,
-                    backgroundColor: el.backgroundColor || "transparent",
-                    fontWeight: 500,
-                    ...(el.customStyle ? JSON.parse(el.customStyle) : {}),
-                    transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
-                  }}
-                  onClick={e => { e.stopPropagation(); selectElement(idx); }}
-                />
-              ) : (
-                <img
-                  src={el.src}
-                  alt=""
-                  className="w-full h-full object-contain rounded"
-                  draggable={false}
-                  style={{
-                    pointerEvents: "none",
-                    background: el.backgroundColor || "transparent",
-                    transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
-                  }}
-                  onClick={e => { e.stopPropagation(); selectElement(idx); }}
-                />
-              )}
-            </Rnd>
-          ))}
+          {/* Drawing Canvas (au-dessus, pointer-events: none si pas en mode dessin) */}
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              zIndex: 20,
+              pointerEvents: drawingMode ? "auto" : "none",
+              background: "transparent",
+            }}
+            onMouseDown={handleStartDraw}
+            onMouseMove={handleDraw}
+            onMouseUp={handleEndDraw}
+            onMouseLeave={handleEndDraw}
+          />
+          {/* Elements existants */}
+          <div style={{ position: "absolute", left: 0, top: 0, width: 800, height: 600, zIndex: 10 }}>
+            {docData.elements.map((el, idx) => (
+              <Rnd
+                key={el.id}
+                size={{ width: el.width, height: el.height }}
+                position={{ x: el.x, y: el.y }}
+                onDragStop={(_: any, d: { x: any; y: any; }) => updateElement(idx, { x: d.x, y: d.y })}
+                onResizeStop={(_: any, __: any, ref: { style: { width: string; height: string; }; }, delta: any, position: Partial<BuilderElement>) =>
+                  updateElement(idx, {
+                    width: parseInt(ref.style.width),
+                    height: parseInt(ref.style.height),
+                    ...position,
+                  })
+                }
+                bounds="parent"
+                minWidth={40}
+                minHeight={30}
+                onClick={() => selectElement(idx)}
+                style={{
+                  zIndex: selectedElementIdx === idx ? 10 : 1,
+                  border: selectedElementIdx === idx ? "2px solid #2563eb" : undefined,
+                  background: el.backgroundColor || "transparent",
+                }}
+              >
+                {el.type === "text" ? (
+                  <textarea
+                    className="w-full h-full border resize-none bg-transparent"
+                    value={el.content}
+                    onChange={e => updateElement(idx, { content: e.target.value })}
+                    style={{
+                      fontSize: el.fontSize || docData.fontSize,
+                      fontFamily: el.fontFamily || docData.fontFamily,
+                      color: el.textColor || docData.textColor,
+                      backgroundColor: el.backgroundColor || "transparent",
+                      fontWeight: 500,
+                      ...(el.customStyle ? JSON.parse(el.customStyle) : {}),
+                      transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
+                    }}
+                    onClick={e => { e.stopPropagation(); selectElement(idx); }}
+                  />
+                ) : (
+                  <img
+                    src={el.src}
+                    alt=""
+                    className="w-full h-full object-contain rounded"
+                    draggable={false}
+                    style={{
+                      pointerEvents: "none",
+                      background: el.backgroundColor || "transparent",
+                      transform: el.rotation ? `rotate(${el.rotation}deg)` : undefined,
+                    }}
+                    onClick={e => { e.stopPropagation(); selectElement(idx); }}
+                  />
+                )}
+              </Rnd>
+            ))}
+          </div>
         </div>
       </div>
 
