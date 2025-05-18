@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const links = [
     { href: '/', label: 'Accueil' },
     { href: '/posts', label: 'Réalisations' },
-    { href: '/tendances', label: 'Tendances' },
+    { href: '/tendance', label: 'Tendances' },
 ];
 
 import {
