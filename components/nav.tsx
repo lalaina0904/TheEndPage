@@ -8,13 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const links = [
     { href: '/', label: 'Accueil' },
-<<<<<<< HEAD
     { href: '/realisations', label: 'Réalisations' },
     { href: '/Hall of Fame', label: 'Hall of Fame' },
-=======
-    { href: '/posts', label: 'Réalisations' },
-    { href: '/tendance', label: 'Tendances' },
->>>>>>> 2cd897570f22e144dbb19114565ca3d072f469e0
 ];
 
 import {
