@@ -24,6 +24,7 @@ import {
     TextCursor,
     ImageIcon,
 } from 'lucide-react';
+import { FaShareSquare } from 'react-icons/fa';
 
 type Collaborator = { initials: string; [key: string]: any };
 
@@ -1005,91 +1006,87 @@ export default function AdvancedEditor() {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-[#272a2b]">
+        <div className="flex flex-col h-screen bg-[#191d1e]">
             {/* Header */}
-            <header className="flex items-center justify-between py-2 px-4 border-b border-gray-200  shadow-sm">
-                <div className="flex items-center">
-                    <div className="flex items-center gap-2 text-[#f1caad] font-semibold">
-                        <NotebookPen size={20} />
-                        <span className="uppercase">Create Page</span>
+            <header className="py-2 px-4 border-b border-gray-200  shadow-sm">
+                <div className="container mx-auto flex items-center justify-between">
+                    <div className="flex items-center">
+                        <div className="flex items-center gap-2 text-[#f1caad] font-semibold">
+                            <NotebookPen size={20} />
+                            <span className="uppercase">
+                                Créer une page Page
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <div className="flex-1 max-w-2xl mx-4">
-                    <input
-                        ref={titleRef}
-                        className="w-full text-lg font-normal px-2 py-1 border-b border-transparent hover:border-neutral-100 focus:border-[#f1caad] focus:outline-none"
-                        placeholder="Titre du document"
-                        value={docData.title}
-                        onChange={(e) =>
-                            setDocData({ ...docData, title: e.target.value })
-                        }
-                    />
-                </div>
-                <div className="flex items-center space-x-2">
-                    <button
-                        onClick={handleSave}
-                        disabled={loading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center">
-                        {loading ? (
-                            <svg
-                                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24">
-                                <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"></circle>
-                                <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        ) : (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="-ml-1 mr-2 h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                                />
-                            </svg>
-                        )}
-                        Partager
-                    </button>
-                    {/* <button
+                    <div className="flex-1 max-w-2xl mx-4">
+                        <input
+                            ref={titleRef}
+                            className="w-full text-lg font-normal px-2 py-1 border-b border-transparent hover:border-neutral-100 focus:border-[#f1caad] focus:outline-none text-white text-center uppercase"
+                            placeholder="Titre de la page"
+                            value={docData.title}
+                            onChange={(e) =>
+                                setDocData({
+                                    ...docData,
+                                    title: e.target.value,
+                                })
+                            }
+                        />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <button
+                            onClick={handleSave}
+                            disabled={loading}
+                            className="px-4 py-2 bg-[#f1caad] text-[#383e3f] rounded hover:bg-[#f1caad] uppercase focus:outline-none focus:ring-2 focus:ring-[#f1caad] flex items-center">
+                            <span>Partager</span>
+                            {loading ? (
+                                <svg
+                                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24">
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            ) : (
+                                <FaShareSquare className="ml-2" size={20} />
+                            )}
+                        </button>
+                        {/* <button
                         onClick={handleExportHtml}
                         className="px-3 py-1 bg-green-600 text-white rounded ml-2">
                         Exporter en HTML
                     </button> */}
+                    </div>
                 </div>
             </header>
 
             {/* Toolbar */}
-            <div className="sticky top-0 z-10 bg-[#272a2b] border-b border-gray-200 px-4 py-2 shadow-sm">
-                <div className="flex items-center space-x-1 overflow-x-auto">
+            <div className="sticky top-0 z-10 bg-[#162125] border-b border-gray-200 px-4 py-2 shadow-sm">
+                <div className="container mx-auto flex items-center space-x-1 overflow-x-auto">
                     {/* Menu déroulant pour les polices */}
                     <div className="relative">
                         <button
                             onClick={() => setShowFontPicker(!showFontPicker)}
-                            className="text-sm border rounded px-2 py-1 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[120px] text-left">
+                            className="text-sm border rounded px-2 py-1 hover:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 min-w-[120px] text-left">
                             {docData.fontFamily}
                         </button>
+
                         {showFontPicker && (
                             <div className="absolute z-20 mt-1 w-48 bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
                                 {fontOptions.map((font) => (
                                     <div
                                         key={font}
                                         onClick={() => handleFontChange(font)}
-                                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                                        className="px-4 py-2 text-sm hover:bg-gray-800 cursor-pointer"
                                         style={{ fontFamily: font }}>
                                         {font}
                                     </div>
@@ -1148,7 +1145,10 @@ export default function AdvancedEditor() {
                         value={docData.tone}
                         onChange={async (e) => {
                             const newTone = e.target.value;
-                            setDocData((prev) => ({ ...prev, tone: newTone }));
+                            setDocData((prev) => ({
+                                ...prev,
+                                tone: newTone,
+                            }));
 
                             // Appel API IA pour appliquer le style au changement de ton
                             setIsAILoading(true);
@@ -1184,7 +1184,10 @@ export default function AdvancedEditor() {
                                     style: data.css,
                                     elements: prev.elements.map((el) =>
                                         el.type === 'text'
-                                            ? { ...el, customStyle: data.css }
+                                            ? {
+                                                  ...el,
+                                                  customStyle: data.css,
+                                              }
                                             : el
                                     ),
                                 }));
@@ -1507,32 +1510,79 @@ export default function AdvancedEditor() {
             </div>
 
             {/* PAGE BUILDER TOOLBAR */}
-            <div className="flex space-x-2 px-4 py-2 bg-[#191d1e] border-b">
-                <button
-                    onClick={addTextElement}
-                    className="px-3 bg-[#f1caad] text-gray-600 uppercase font-medium rounded flex items-center">
-                    <TextCursor size={16} className="mr-1" /> <span>Texte</span>
-                </button>
-                <label className="px-3 py-1 bg-[#f1caad] text-gray-600 uppercase font-medium rounded cursor-pointer flex flex items-center">
-                    <ImageIcon size={16} className="mr-1" /> <span>image</span>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleBuilderImageUpload}
-                        className="hidden"
-                    />
-                </label>
-                <button
-                    onClick={() => setShowGifSearch(true)}
-                    className="px-3 py-1 bg-[#f1caad] text-gray-600 uppercase font-medium rounded flex items-center">
-                    <ImageIcon size={16} className="mr-1" /> <span>GIF</span>
-                </button>
+            <div className="container mx-auto flex justify-between px-4 py-2 bg-[#191d1e] border-b">
+                <div className="flex gap-4">
+                    <button
+                        onClick={addTextElement}
+                        className="px-3 bg-[#f1caad] text-gray-600 uppercase font-medium rounded flex items-center">
+                        <TextCursor size={16} className="mr-1" />{' '}
+                        <span>Texte</span>
+                    </button>
+                    <label className="px-3 py-1 bg-[#f1caad] text-gray-600 uppercase font-medium rounded cursor-pointer flex flex items-center">
+                        <ImageIcon size={16} className="mr-1" />{' '}
+                        <span>image</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleBuilderImageUpload}
+                            className="hidden"
+                        />
+                    </label>
+                    <button
+                        onClick={() => setShowGifSearch(true)}
+                        className="px-3 py-1 bg-[#f1caad] text-gray-600 uppercase font-medium rounded flex items-center">
+                        <ImageIcon size={16} className="mr-1" />{' '}
+                        <span>GIF</span>
+                    </button>
+                </div>
+
+                <div className="flex items-center space-x-2 p-2 bg-transparent border-y-2 ">
+                    <p>DESSINS :</p>
+                    <button
+                        onClick={() => setDrawingMode(!drawingMode)}
+                        className={`px-3 py-1 rounded ${
+                            drawingMode
+                                ? 'bg-green-600 text-white'
+                                : 'bg-gray-500'
+                        }`}>
+                        {drawingMode ? 'Désactiver' : 'Activer'}
+                    </button>
+                    <label className="flex items-center space-x-1">
+                        <span className="text-sm">Couleur :</span>
+                        <input
+                            type="color"
+                            value={drawColor}
+                            onChange={(e) => setDrawColor(e.target.value)}
+                            disabled={!drawingMode}
+                        />
+                    </label>
+                    <label className="flex items-center space-x-1">
+                        <span className="text-sm">Taille :</span>
+                        <input
+                            type="range"
+                            min={1}
+                            max={24}
+                            value={drawSize}
+                            onChange={(e) =>
+                                setDrawSize(Number(e.target.value))
+                            }
+                            disabled={!drawingMode}
+                        />
+                        <span className="text-xs">{drawSize}px</span>
+                    </label>
+                    <button
+                        onClick={handleClearCanvas}
+                        className="px-2 py-1 bg-red-500 text-white rounded"
+                        disabled={!drawingMode}>
+                        Effacer
+                    </button>
+                </div>
             </div>
 
             {/* Toolbar de l'élément sélectionné */}
             {selectedElementIdx !== null && (
                 <div className="flex items-center space-x-2 bg-[#13100e] border p-2 rounded mb-2">
-                    <span className="text-sm text-gray-50">
+                    <span className="text-sm text-gray-50 uppercase">
                         Élément sélectionné :
                     </span>
                     <button
@@ -1596,50 +1646,6 @@ export default function AdvancedEditor() {
                 </div>
             )}
 
-            {/* DRAWING TOOLBAR */}
-            <div>
-                <p>DESSINS</p>
-                <div className="flex items-center space-x-2 p-2 bg-transparent border-y-2 ">
-                    <button
-                        onClick={() => setDrawingMode(!drawingMode)}
-                        className={`px-3 py-1 rounded ${
-                            drawingMode
-                                ? 'bg-green-600 text-white'
-                                : 'bg-gray-500'
-                        }`}>
-                        {drawingMode ? 'Désactiver' : 'Activer'}
-                    </button>
-                    <label className="flex items-center space-x-1">
-                        <span className="text-xs">Couleur :</span>
-                        <input
-                            type="color"
-                            value={drawColor}
-                            onChange={(e) => setDrawColor(e.target.value)}
-                            disabled={!drawingMode}
-                        />
-                    </label>
-                    <label className="flex items-center space-x-1">
-                        <span className="text-xs">Taille :</span>
-                        <input
-                            type="range"
-                            min={1}
-                            max={24}
-                            value={drawSize}
-                            onChange={(e) =>
-                                setDrawSize(Number(e.target.value))
-                            }
-                            disabled={!drawingMode}
-                        />
-                        <span className="text-xs">{drawSize}px</span>
-                    </label>
-                    <button
-                        onClick={handleClearCanvas}
-                        className="px-2 py-1 bg-red-500 text-white rounded"
-                        disabled={!drawingMode}>
-                        Effacer
-                    </button>
-                </div>
-            </div>
             {/* PAGE BUILDER CANVAS */}
             <div
                 className="flex-1 overflow-auto p-8"
@@ -1678,7 +1684,10 @@ export default function AdvancedEditor() {
                         {docData.elements.map((el, idx) => (
                             <Rnd
                                 key={el.id}
-                                size={{ width: el.width, height: el.height }}
+                                size={{
+                                    width: el.width,
+                                    height: el.height,
+                                }}
                                 position={{ x: el.x, y: el.y }}
                                 onDragStop={(_: any, d: { x: any; y: any }) =>
                                     updateElement(idx, { x: d.x, y: d.y })
@@ -1776,7 +1785,7 @@ export default function AdvancedEditor() {
             </div>
 
             {/* Status Bar */}
-            <footer className="border-t border-gray-200 bg-white px-4 py-2 text-xs text-gray-500 flex justify-between items-center">
+            <footer className="border-t border-gray-200 text-white px-4 py-2 text-xs bg-[#191d1e] flex justify-between items-center">
                 <div>
                     {wordCount} mots • {charCount} caractères
                 </div>
@@ -1917,7 +1926,7 @@ export default function AdvancedEditor() {
             {/* GIF Search Dialog */}
             {showGifSearch && (
                 <div className="fixed inset-0 bg-black/40 bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-4 max-w-lg w-full">
+                    <div className="bg-[#191d1e] text-white rounded-lg p-4 max-w-xl w-full">
                         <div className="flex mb-2">
                             <input
                                 type="text"
@@ -1928,13 +1937,13 @@ export default function AdvancedEditor() {
                             />
                             <button
                                 onClick={() => searchGifs(gifQuery)}
-                                className="ml-2 px-3 py-1 bg-blue-500 text-white rounded"
+                                className="ml-2 px-3 py-1 bg-blue-500 text-white uppercase rounded"
                                 disabled={isGifLoading}>
                                 {isGifLoading ? 'Recherche...' : 'Rechercher'}
                             </button>
                             <button
                                 onClick={() => setShowGifSearch(false)}
-                                className="ml-2 px-3 py-1 bg-gray-300 rounded">
+                                className="ml-2 px-3 py-1 bg-gray-400 text-neutral-800 uppercase rounded">
                                 Fermer
                             </button>
                         </div>
@@ -1957,8 +1966,8 @@ export default function AdvancedEditor() {
             )}
 
             {/* Templates de disposition façon Canva */}
-            <div className="flex items-center space-x-4 p-4 bg-gray-100 border-b">
-                <span className="text-xs text-gray-500">
+            <div className="flex items-center space-x-4 p-4 bg-[#f1caad] border-b">
+                <span className="text-sm text-gray-500">
                     Templates de disposition :
                 </span>
                 {layoutTemplates.map((tpl, i) => (
