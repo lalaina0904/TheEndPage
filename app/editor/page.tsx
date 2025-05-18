@@ -1933,7 +1933,7 @@ export default function AdvancedEditor() {
                                 value={gifQuery}
                                 onChange={(e) => setGifQuery(e.target.value)}
                                 placeholder="Rechercher un GIF"
-                                className="flex-1 border text-black rounded px-2 py-1"
+                                className="flex-1 border rounded px-2 py-1"
                             />
                             <button
                                 onClick={() => searchGifs(gifQuery)}
