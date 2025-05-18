@@ -89,25 +89,18 @@ const Hero = () => {
                         custom={0.6}
                         variants={fadeUp}>
                         <SignedOut>
-                            <div className="bg-background/2 backdrop-blur-lg uppercase text-lg md:text-xl py-6 px-8 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] ">
-                                <SignInButton forceRedirectUrl="/editor">
-                                    <Button
-                                        variant="ghost"
-                                        className="text-[#f1caad] border-[#f1caad] uppercase font-semibold tracking-wider text-xl">
-                                        Créer une page
-                                        <ArrowUpRight
-                                            size={40}
-                                            className="ml-2"
-                                        />
-                                    </Button>
-                                </SignInButton>
-                            </div>
+                            <SignInButton forceRedirectUrl="/editor">
+                                <div className="bg-background/2 tracking-wide backdrop-blur-lg uppercase text-lg md:text-xl px-8 py-4 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] text-center flex">
+                                    <Link href="/editor">Créer une page</Link>
+                                    <ArrowUpRight size={30} className="ml-2" />
+                                </div>
+                            </SignInButton>
                         </SignedOut>
 
                         <SignedIn>
                             <div className="bg-background/2 tracking-wide backdrop-blur-lg uppercase text-lg md:text-xl px-8 py-4 rounded-2xl font-semibold border-[0.5px] border-[#f1caad]/40 text-[#f1caad] text-center flex">
                                 <Link href="/editor">Créer une page</Link>
-                                <ArrowUpRight size={40} className="ml-2" />
+                                <ArrowUpRight size={30} className="ml-2" />
                             </div>
                         </SignedIn>
                     </motion.div>
