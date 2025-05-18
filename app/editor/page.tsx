@@ -38,6 +38,62 @@ function camelToKebab(str: string) {
   return str.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
 }
 
+// Nouvelle version des templates de disposition avec aperçu visuel façon Canva
+const layoutTemplates = [
+  {
+    name: "Titre centré + image dessous",
+    apply: (elements: BuilderElement[]) => {
+      let y = 40;
+      return elements.map((el, i) => {
+        if (i === 0 && el.type === "text") {
+          return { ...el, x: 250, y, width: 300, height: 60 };
+        }
+        if (i === 1 && (el.type === "image" || el.type === "gif")) {
+          return { ...el, x: 300, y: 120, width: 200, height: 200 };
+        }
+        return el;
+      });
+    },
+    preview: [
+      { x: 20, y: 8, width: 48, height: 12, color: "#c7d2fe", label: "Titre" },
+      { x: 30, y: 28, width: 32, height: 24, color: "#fbbf24", label: "Image" }
+    ]
+  },
+  {
+    name: "2 colonnes",
+    apply: (elements: BuilderElement[]) => {
+      return elements.map((el, i) => ({
+        ...el,
+        x: i % 2 === 0 ? 80 : 420,
+        y: 60 + Math.floor(i / 2) * 180,
+        width: 300,
+        height: 120,
+      }));
+    },
+    preview: [
+      { x: 8, y: 12, width: 28, height: 32, color: "#fbbf24", label: "Bloc" },
+      { x: 44, y: 12, width: 28, height: 32, color: "#c7d2fe", label: "Bloc" }
+    ]
+  },
+  {
+    name: "Liste verticale",
+    apply: (elements: BuilderElement[]) => {
+      return elements.map((el, i) => ({
+        ...el,
+        x: 250,
+        y: 40 + i * 120,
+        width: 300,
+        height: 80,
+      }));
+    },
+    preview: [
+      { x: 20, y: 6, width: 40, height: 10, color: "#fbbf24", label: "Bloc" },
+      { x: 20, y: 20, width: 40, height: 10, color: "#c7d2fe", label: "Bloc" },
+      { x: 20, y: 34, width: 40, height: 10, color: "#fbbf24", label: "Bloc" }
+    ]
+  }
+];
+
 export default function AdvancedEditor() {
 
    const { user } = useUser();
@@ -667,6 +723,15 @@ export default function AdvancedEditor() {
     }));
   };
 
+  // Ajoute la suppression d'un élément
+  const deleteElement = (idx: number) => {
+    setDocData(prev => ({
+      ...prev,
+      elements: prev.elements.filter((_, i) => i !== idx),
+    }));
+    setSelectedElementIdx(null);
+  };
+
   // --- FONCTIONNALITÉ DESSIN ---
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawColor, setDrawColor] = useState("#ff0000");
@@ -810,7 +875,6 @@ export default function AdvancedEditor() {
     URL.revokeObjectURL(url);
   };
 
-  // ...return JSX...
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
@@ -1210,6 +1274,13 @@ export default function AdvancedEditor() {
             onChange={e => changeSelectedElementBg(e.target.value)}
             title="Couleur de fond"
           />
+          <button
+            onClick={() => deleteElement(selectedElementIdx)}
+            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+            title="Supprimer l'élément"
+          >
+            Supprimer
+          </button>
         </div>
       )}
 
@@ -1498,6 +1569,49 @@ export default function AdvancedEditor() {
           </div>
         </div>
       )}
+
+      {/* Templates de disposition façon Canva */}
+      <div className="flex items-center space-x-4 p-4 bg-gray-100 border-b">
+        <span className="text-xs text-gray-500">Templates de disposition :</span>
+        {layoutTemplates.map((tpl, i) => (
+          <button
+            key={tpl.name}
+            onClick={() => setDocData(prev => ({
+              ...prev,
+              elements: tpl.apply(prev.elements)
+            }))}
+            className="flex flex-col items-center px-2 py-1 rounded hover:bg-blue-100 border border-transparent hover:border-blue-400 transition"
+            title={tpl.name}
+          >
+            {/* Miniature de la disposition */}
+            <div className="relative w-20 h-14 bg-white border rounded shadow-sm mb-1 overflow-hidden">
+              {tpl.preview.map((block, idx) => (
+                <div
+                  key={idx}
+                  className="absolute rounded"
+                  style={{
+                    left: `${block.x}%`,
+                    top: `${block.y}%`,
+                    width: `${block.width}%`,
+                    height: `${block.height}%`,
+                    background: block.color,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 10,
+                    color: "#222",
+                    fontWeight: 600,
+                    border: "1px solid #ddd"
+                  }}
+                >
+                  {block.label}
+                </div>
+              ))}
+            </div>
+            <span className="text-[11px] text-gray-700">{tpl.name}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
